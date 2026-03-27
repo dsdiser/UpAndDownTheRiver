@@ -1,0 +1,79 @@
+.overlay {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: rgba(26, 26, 26, 0.8);
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-right: 0.15rem;
+}
+
+.input {
+  width: 3.5rem;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.input:focus {
+  border-color: #646cff;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.submitButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border-radius: 4px;
+  background-color: #646cff;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.submitButton:hover {
+  background-color: #535bf2;
+}
+
+.submitButton:active {
+  transform: scale(0.95);
+}
+
+.submitButton:disabled {
+  background-color: rgba(100, 108, 255, 0.4);
+  cursor: not-allowed;
+}
+
+.checkIcon {
+  width: 0.85rem;
+  height: 0.85rem;
+  color: white;
+}

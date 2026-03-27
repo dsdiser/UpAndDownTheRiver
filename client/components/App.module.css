@@ -1,0 +1,30 @@
+/* App scoped styles (from style.css: app, player, join, controls, result, history, logo, #app/#auth) */
+:root {
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+}
+
+.app {
+  color: inherit;
+  display: flex;
+  max-width: 80%;
+  place-self: center;
+}
+
+.player {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.result {
+  font-weight: 600;
+}
+
+.coinArea {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1.2rem;
+}

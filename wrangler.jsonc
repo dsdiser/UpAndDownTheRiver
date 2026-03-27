@@ -1,0 +1,33 @@
+{
+  "name": "up-and-down-the-river",
+  "compatibility_date": "2025-04-03",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/ws/*", "/ping"],
+  },
+  "main": "./worker/main.ts",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "ROOM_DO",
+        "class_name": "RoomDO",
+      },
+    ],
+  },
+  "$schema": "./node_modules/wrangler/website-schema.json",
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RoomDO"],
+    },
+  ],
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+    },
+  },
+}

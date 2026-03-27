@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flip with Friends</title>
+    <style>
+      .about-link {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 9999;
+        text-decoration: none;
+        color: #111;
+        background: rgba(255, 255, 255, 0.85);
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 14px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+      }
+      .about-link:hover {
+        background: rgba(255, 255, 255, 1);
+      }
+      @media (prefers-color-scheme: dark) {
+        .about-link {
+          color: #f5f5f5;
+          background: rgba(20, 20, 20, 0.6);
+        }
+        .about-link:hover {
+          background: rgba(20, 20, 20, 0.9);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <a
+      id="about-link"
+      class="about-link"
+      href="/about.html"
+      aria-label="About this project"
+      style="display: none"
+      >About</a
+    >
+    <div id="app"></div>
+    <script type="module" src="/client/main.tsx"></script>
+    <script>
+      (function () {
+        try {
+          // If top === self the page is not in an iframe, so show the link.
+          if (window.top === window.self) {
+            var a = document.getElementById('about-link');
+            if (a) a.style.display = '';
+          }
+        } catch (e) {
+          // Accessing window.top can throw on cross-origin frames — treat as in-iframe and keep hidden.
+        }
+      })();
+    </script>
+  </body>
+</html>

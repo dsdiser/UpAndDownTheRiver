@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "types": ["../worker-configuration.d.ts", "@cloudflare/workers-types/2023-07-01"]
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["./tests/**/*", "./dist/**/*"]
+}
