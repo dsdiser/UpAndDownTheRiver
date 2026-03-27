@@ -1,11 +1,11 @@
-# Coin Flip — Discord Activity
+# Up and Down the River — Online Game
 
-Multiplayer lobby that runs as a Discord Activity so you can flip coins together inside Discord or on any webpage.
+Online "Up and Down the River" game that provides a Multiplayer lobby that also runs as a Discord Activity.
 
 ## Features
 
-- Multiplayer lobby for joining a coin flip session
-- Real-time flips resolved in the activity or on the webpage
+- Multiplayer lobby
+- TBD
 
 ## Dependencies
 
