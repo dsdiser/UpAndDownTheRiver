@@ -3,11 +3,12 @@ import { RemoteMember } from './userAtoms';
 
 export enum MessageType {
   Join = 'join',
-  FlipStart = 'flip:start',
-  FlipResult = 'flip:result',
+  GameStart = 'game:start',
+  GameEnd = 'game:end',
   Presence = 'presence',
 }
 
+// Base message structure
 interface BaseMessage {
   type: MessageType;
   userId: string; // ID of the user sending the message
@@ -23,8 +24,8 @@ export interface JoinMessage extends BaseMessage {
   roomMembers?: string[]; // Should be fulfilled by server
 }
 
-export interface FlipStartMessage extends BaseMessage {
-  type: MessageType.FlipStart;
+export interface GameStartMessage extends BaseMessage {
+  type: MessageType.GameStart;
   seed: number;
 }
 
@@ -33,8 +34,8 @@ export interface PresenceMessage extends BaseMessage {
   members: Array<RemoteMember>;
 }
 
-export interface FlipResultMessage extends BaseMessage {
-  type: MessageType.FlipResult;
+export interface GameEndMessage extends BaseMessage {
+  type: MessageType.GameEnd;
   payload: {
     result: string; // 'heads' | 'tails' etc. Keep generic string for now
     seed?: number;
@@ -43,8 +44,8 @@ export interface FlipResultMessage extends BaseMessage {
 
 export type IncomingMessage =
   | JoinMessage
-  | FlipStartMessage
-  | FlipResultMessage
+  | GameStartMessage
+  | GameEndMessage
   | PresenceMessage
   | ({ type: string } & Record<string, unknown>);
 

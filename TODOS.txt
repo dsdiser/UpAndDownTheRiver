@@ -1,2 +1,7 @@
 TODOS
 - setup
+- define max players
+- create table
+- determine how to handle lobby
+- main menu w/ start button
+- allow players to drop in and out? 
