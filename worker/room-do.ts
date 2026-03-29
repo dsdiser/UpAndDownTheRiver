@@ -21,13 +21,13 @@ export class RoomDO implements DurableObjectClass {
     // Rehydrate any accepted websockets after hibernation if supported
     try {
       const websockets = this.state.getWebSockets() || [];
-      if (websockets) {
-        for (const ws of websockets) {
-          // Recreates rooms after hibernation based on serialized attachment
-          let meta = ws.deserializeAttachment();
-          if (!meta || !meta.roomId || !meta.userId) continue;
-          this.addMemberToRoom(meta.roomId, { userId: meta.userId, avatar: meta.avatar, ws });
-        }
+      if (!websockets) return;
+
+      for (const ws of websockets) {
+        // Recreates rooms after hibernation based on serialized attachment
+        let meta = ws.deserializeAttachment();
+        if (!meta || !meta.roomId || !meta.userId) continue;
+        this.addMemberToRoom(meta.roomId, { userId: meta.userId, avatar: meta.avatar, ws });
       }
     } catch (e) {
       console.debug('RoomDO: websocket rehydration failed', e);
@@ -66,6 +66,7 @@ export class RoomDO implements DurableObjectClass {
   webSocketMessage(ws: WebSocket, data: string) {
     try {
       const msg = JSON.parse(data.toString());
+      // TODO: use joinMessage type from websocket atom types, make it shared
       if (
         msg &&
         msg.type === 'join' &&
@@ -124,7 +125,9 @@ export class RoomDO implements DurableObjectClass {
       const member = Array.from(set).find((m) => m.ws === ws);
       if (!member) continue;
       set.delete(member);
-      if (set.size === 0) this.connections.delete(roomId);
+      if (set.size === 0) {
+        this.connections.delete(roomId);
+      }
       this.broadcast(
         roomId,
         JSON.stringify({

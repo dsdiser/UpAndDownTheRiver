@@ -1,4 +1,4 @@
-const enum GameState {
+export const enum GameState {
   WaitingForPlayers = 'WaitingForPlayers',
   DealingCards = 'DealingCards',
   PlayingTricks = 'PlayingTricks',

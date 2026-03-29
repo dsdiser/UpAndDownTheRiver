@@ -3,16 +3,18 @@ import ReactDOM from 'react-dom/client';
 import './styles/global.css';
 import appStyles from './components/App.module.css';
 import { DiscordContextProvider, useDiscordSdk } from './hooks/useDiscordSdk';
-import { Provider as JotaiProvider, useAtomValue, useSetAtom } from 'jotai';
+import { Provider as JotaiProvider, useAtomValue } from 'jotai';
 import useWebsocket from './hooks/useWebsocket';
 import DebugOverlay from './components/debug-overlay/DebugOverlay';
 import BalatroBackground from './components/balatro-background/BalatroBackground';
-import { setRandomSeedAtom, seedAtom, seedStore } from './state/coinAtoms';
 import { userAtom, roomMembersAtom } from './state/userAtoms';
+import { gameStateAtom } from './state/gameStateAtom';
+import { GameState } from './types/gameState';
 import { AvatarOverlay } from './components/avatar-overlay/AvatarOverlay';
-import { MessageType } from './state/websocketAtoms';
 import LoadingScreen from './components/loading-screen/LoadingScreen';
 import RoomInput from './components/room-input/RoomInput';
+import MainMenu from './components/main-menu/MainMenu';
+import Game from './components/game/Game';
 import { preloadCardImages } from './types/cards';
 
 const inIframe = window.self !== window.top;
@@ -36,8 +38,7 @@ const RiverApp: React.FC = () => {
     useDiscordSdk();
   const user = useAtomValue(userAtom);
   const roomMembers = useAtomValue(roomMembersAtom);
-  const seed = useAtomValue(seedAtom);
-  const setRandomSeed = useSetAtom(setRandomSeedAtom);
+  const gameState = useAtomValue(gameStateAtom);
   const { send, connectionStatus } = useWebsocket(instanceId);
 
   const debugOverlay = !inIframe && (
@@ -83,7 +84,11 @@ const RiverApp: React.FC = () => {
         discordSdk={discordSdk}
       />
       <div className={appStyles.app}>
-        <div className={appStyles.player}></div>
+        {gameState === GameState.WaitingForPlayers ? (
+          <MainMenu send={send} isConnected={connectionStatus === WebSocket.OPEN} />
+        ) : (
+          <Game />
+        )}
       </div>
     </>
   );

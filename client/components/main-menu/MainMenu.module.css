@@ -1,0 +1,60 @@
+.menu {
+  width: 100%;
+  max-width: 520px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.playerList {
+  display: grid;
+  gap: 12px;
+}
+
+.statusMessage {
+  color: rgba(255, 255, 255, 0.85);
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.playerName {
+  color: #fff;
+  font-weight: 600;
+}
+
+.emptyState {
+  color: rgba(255, 255, 255, 0.65);
+  font-style: italic;
+}
+
+.startButton {
+  align-self: flex-start;
+  padding: 14px 22px;
+  border: none;
+  border-radius: 999px;
+  background: #6e57ff;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.startButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.startButton:not(:disabled):hover {
+  transform: translateY(-1px);
+}

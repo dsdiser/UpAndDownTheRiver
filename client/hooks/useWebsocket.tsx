@@ -7,8 +7,11 @@ import {
   MessageType,
   FlipStartMessage,
   PresenceMessage,
+  GameStartMessage,
 } from '../state/websocketAtoms';
 import { activeFlipperUserIdAtom, seedAtom, seedStore, startFlipAtom } from '../state/coinAtoms';
+import { gameStateAtom } from '../state/gameStateAtom';
+import { GameState } from '../types/gameState';
 import { hc } from 'hono/client';
 import { type appType } from '../../worker/main';
 import { userAtom } from '../state/userAtoms';
@@ -31,6 +34,7 @@ export function useWebsocket(roomId: string) {
   const setPushIncoming = useSetAtom(pushIncomingAtom);
   const setRoomMembers = useSetAtom(roomMembersAtom);
   const setActiveFlipperUserId = useSetAtom(activeFlipperUserIdAtom);
+  const setGameState = useSetAtom(gameStateAtom);
 
   const handleMessage = useCallback(
     (parsedMessage: IncomingMessage) => {
@@ -43,6 +47,12 @@ export function useWebsocket(roomId: string) {
         case MessageType.Presence:
           const members = (parsedMessage as PresenceMessage).members as Array<RemoteMember>;
           setRoomMembers(members);
+          break;
+        case MessageType.GameStart:
+          const startMessage = parsedMessage as GameStartMessage;
+          setSeed(startMessage.seed);
+          seedStore.set(seedAtom, startMessage.seed);
+          setGameState(GameState.DealingCards);
           break;
         case MessageType.FlipStart:
           let message = parsedMessage as FlipStartMessage;
@@ -59,7 +69,7 @@ export function useWebsocket(roomId: string) {
       }
       setPushIncoming(parsedMessage);
     },
-    [setPushIncoming, setStartFlip]
+    [setPushIncoming, setStartFlip, setSeed, setRoomMembers, setActiveFlipperUserId, setGameState]
   );
 
   const connectWebsocket = useCallback(() => {
@@ -110,7 +120,7 @@ export function useWebsocket(roomId: string) {
       } catch (e) {}
       wsRef.current = null;
     };
-  }, [roomId, setPushIncoming]);
+  }, [roomId, handleMessage]);
 
   useEffect(() => {
     const disconnect = connectWebsocket();
@@ -129,16 +139,18 @@ export function useWebsocket(roomId: string) {
       console.warn('No user, cannot send message');
       return;
     }
-    if (message.type === MessageType.Join) {
-      message.avatar = user.avatar;
+
+    const outgoingMessage = { ...message } as OutgoingMessage;
+    if (outgoingMessage.type === MessageType.Join) {
+      outgoingMessage.avatar = user.avatar;
     }
-    message.id = createMessageId();
-    message.userId = user.id;
-    message.roomId = roomId;
-    message.timestamp = Date.now();
-    const stringifiedMessage = JSON.stringify(message);
+    outgoingMessage.id = createMessageId();
+    outgoingMessage.userId = user.id;
+    outgoingMessage.roomId = roomId;
+    outgoingMessage.timestamp = Date.now();
+    const stringifiedMessage = JSON.stringify(outgoingMessage);
     wsRef.current?.send(stringifiedMessage);
-  }, []);
+  }, [user, roomId]);
 
   return { send, connectionStatus: wsRef.current?.readyState || WebSocket.CLOSED };
 }
