@@ -16,15 +16,13 @@ const MainMenu: React.FC<MainMenuProps> = ({ send, isConnected }) => {
   const handleStartGame = () => {
     if (!isConnected || requestSent) return;
     setRequestSent(true);
-    const newSeed = Math.floor(Math.random() * 0xffffffff);
-    send({ type: MessageType.GameStart, seed: newSeed });
+    send({ type: MessageType.GameStart });
   };
 
   return (
     <div className={styles.menu}>
       <div className={styles.header}>
         <h2>Up and Down the River</h2>
-        <p>Players can join the room and then start the game together.</p>
       </div>
 
       <div className={styles.playerList}>

@@ -1,7 +1,18 @@
-TODOS
-- setup
-- define max players
-- create table
-- determine how to handle lobby
+TODOS:
+- create table for players
+- UI
+-   User display w/ cards
+-   Show a user's own hand, allow them to play a card
+- define max players in UI + backend
+- Allow setting the number of rounds in the prelobby + during the game. 
+- Scoreboard display
+- Basic Tutorial
+- Handle betting round
+- Handle playing round
+
+Extras that probably won't get done:
+- Allow for different scoring systems
+
+Done:
 - main menu w/ start button
-- allow players to drop in and out? 
+- basic state sync
