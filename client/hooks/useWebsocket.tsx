@@ -7,14 +7,25 @@ import {
   MessageType,
   PresenceMessage,
   GameStartMessage,
+  GameStateSyncMessage,
+  CardPlayedMessage,
+  TurnUpdateMessage,
 } from '../../types/messages';
-import { activeFlipperUserIdAtom, seedAtom, seedStore } from '../state/coinAtoms';
+import { seedAtom, seedStore } from '../state/coinAtoms';
 import { gameStateAtom } from '../state/gameStateAtom';
 import { GameState } from '../types/gameState';
 import { hc } from 'hono/client';
 import { type appType } from '../../worker/main';
 import { userAtom } from '../state/userAtoms';
 import { type RemoteMember, roomMembersAtom } from '../state/userAtoms';
+import {
+  activePlayerIdAtom,
+  playerHandAtom,
+  playerHandSizesAtom,
+  playedCardsAtom,
+  currentTrickAtom,
+  scoresAtom,
+} from '../state/gameAtoms';
 import { getProxiedUrl } from '../utils/url-proxy';
 
 function createMessageId() {
@@ -31,8 +42,13 @@ export function useWebsocket(roomId: string) {
   const setSeed = useSetAtom(seedAtom);
   const setPushIncoming = useSetAtom(pushIncomingAtom);
   const setRoomMembers = useSetAtom(roomMembersAtom);
-  const setActiveFlipperUserId = useSetAtom(activeFlipperUserIdAtom);
   const setGameState = useSetAtom(gameStateAtom);
+  const setActivePlayerId = useSetAtom(activePlayerIdAtom);
+  const setPlayerHand = useSetAtom(playerHandAtom);
+  const setPlayerHandSizes = useSetAtom(playerHandSizesAtom);
+  const setPlayedCards = useSetAtom(playedCardsAtom);
+  const setCurrentTrick = useSetAtom(currentTrickAtom);
+  const setScores = useSetAtom(scoresAtom);
 
   const handleMessage = useCallback(
     (parsedMessage: IncomingMessage) => {
@@ -52,6 +68,45 @@ export function useWebsocket(roomId: string) {
           seedStore.set(seedAtom, startMessage.seed);
           setGameState(GameState.DealingCards);
           break;
+        case MessageType.GameStateSync:
+          const syncMessage = parsedMessage as GameStateSyncMessage;
+          setGameState(syncMessage.phase);
+          setActivePlayerId(syncMessage.activePlayerId);
+          setPlayerHandSizes(syncMessage.playerHandSizes);
+          setPlayedCards(syncMessage.playedCards);
+          setCurrentTrick(syncMessage.trick);
+          setScores(syncMessage.scores);
+          if (syncMessage.playerHands && user) {
+            setPlayerHand(syncMessage.playerHands[user.id] ?? []);
+          }
+          break;
+        case MessageType.CardPlayed:
+          const playedMessage = parsedMessage as CardPlayedMessage;
+          setPlayedCards((prev) => [
+            ...prev,
+            {
+              userId: playedMessage.userId,
+              card: playedMessage.card,
+              timestamp: playedMessage.timestamp ?? Date.now(),
+            },
+          ]);
+          setCurrentTrick(playedMessage.trick);
+          if (playedMessage.activePlayerId !== null) {
+            setActivePlayerId(playedMessage.activePlayerId);
+          }
+          if (user?.id === playedMessage.userId) {
+            setPlayerHand((prev) => {
+              const index = prev.indexOf(playedMessage.card);
+              if (index === -1) return prev;
+              return [...prev.slice(0, index), ...prev.slice(index + 1)];
+            });
+          }
+          break;
+        case MessageType.TurnUpdate:
+          const turnMessage = parsedMessage as TurnUpdateMessage;
+          setActivePlayerId(turnMessage.userId);
+          setCurrentTrick(turnMessage.trick);
+          break;
         case MessageType.GameEnd:
           break;
         default:
@@ -60,14 +115,25 @@ export function useWebsocket(roomId: string) {
       }
       setPushIncoming(parsedMessage);
     },
-    [setPushIncoming, setSeed, setRoomMembers, setActiveFlipperUserId, setGameState]
+    [
+      setPushIncoming,
+      setSeed,
+      setRoomMembers,
+      setGameState,
+      setActivePlayerId,
+      setPlayerHand,
+      setPlayerHandSizes,
+      setPlayedCards,
+      setCurrentTrick,
+      setScores,
+      user,
+    ]
   );
 
   const connectWebsocket = useCallback(() => {
     const client = hc<appType>(websocketUrl);
     // Typing is weird here, but it works
-    const ws: WebSocket = client.ws.initiate.$ws(0);
-    console.log(ws);
+    const ws: WebSocket = (client.ws.initiate as any).$ws(0);
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -93,11 +159,11 @@ export function useWebsocket(roomId: string) {
       console.warn('Websocket error', err);
     };
 
-    ws.onclose = (shouldRetry: boolean = true) => {
+    ws.onclose = (e: CloseEvent) => {
       // noop for now
       console.debug('Websocket closed.');
       // ws.close();
-      if (shouldRetry) {
+      if (e.reason === 'retry') {
         setTimeout(() => {
           connectWebsocket();
         }, reconnectInterval);
@@ -107,7 +173,7 @@ export function useWebsocket(roomId: string) {
 
     return () => {
       try {
-        ws.close(false);
+        ws.close(1000, 'retry');
       } catch (e) {}
       wsRef.current = null;
     };
