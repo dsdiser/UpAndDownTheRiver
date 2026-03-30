@@ -21,7 +21,7 @@ export type RemoteMember = {
 export interface BaseMessage {
   type: MessageType;
   userId: string;
-  roomId?: string;
+  roomId: string;
   timestamp?: number;
   id: string;
 }
@@ -59,6 +59,11 @@ export type PlayedCard = {
 export interface GameStateSyncMessage extends BaseMessage {
   type: MessageType.GameStateSync;
   phase: GameState;
+  roundNumber: number;
+  handSize: number;
+  roundDirection: 'up' | 'down';
+  maxHandSize: number;
+  trumpCard: CardFace | null;
   activePlayerId: string | null;
   turnOrder: string[];
   trick: PlayedCard[];
