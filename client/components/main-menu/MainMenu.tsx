@@ -1,9 +1,8 @@
-import React, { use, useState } from 'react';
+import React, { useState } from 'react';
 import styles from './MainMenu.module.css';
 import { roomMembersAtom } from '../../state/userAtoms';
-import { MessageType, OutgoingMessage } from '../../state/websocketAtoms';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { seedAtom, setRandomSeedAtom } from '../../state/coinAtoms';
+import { MessageType, OutgoingMessage } from '../../../types/messages';
+import { useAtomValue } from 'jotai';
 
 interface MainMenuProps {
   send: (message: OutgoingMessage) => void;

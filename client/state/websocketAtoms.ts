@@ -1,55 +1,5 @@
 import { atom } from 'jotai';
-import { RemoteMember } from './userAtoms';
-
-export enum MessageType {
-  Join = 'join',
-  GameStart = 'game:start',
-  GameEnd = 'game:end',
-  Presence = 'presence',
-}
-
-// Base message structure
-interface BaseMessage {
-  type: MessageType;
-  userId: string; // ID of the user sending the message
-  roomId?: string; // This is optional to allow clients to craft messages easier, but useWebsocket will always set it
-  timestamp?: number;
-  id: string;
-}
-
-// Specific message shapes
-export interface JoinMessage extends BaseMessage {
-  type: MessageType.Join;
-  avatar?: string;
-  roomMembers?: string[]; // Should be fulfilled by server
-}
-
-export interface GameStartMessage extends BaseMessage {
-  type: MessageType.GameStart;
-  seed: number;
-}
-
-export interface PresenceMessage extends BaseMessage {
-  type: MessageType.Presence;
-  members: Array<RemoteMember>;
-}
-
-export interface GameEndMessage extends BaseMessage {
-  type: MessageType.GameEnd;
-  payload: {
-    result: string; // 'heads' | 'tails' etc. Keep generic string for now
-    seed?: number;
-  };
-}
-
-export type IncomingMessage =
-  | JoinMessage
-  | GameStartMessage
-  | GameEndMessage
-  | PresenceMessage
-  | ({ type: string } & Record<string, unknown>);
-
-export type OutgoingMessage = IncomingMessage | ({ type: string } & Record<string, unknown>);
+import type { IncomingMessage } from '../../types/messages';
 
 // Base incoming raw message atom (last parsed incoming message)
 export const incomingMessageAtom = atom<IncomingMessage | null>(null);

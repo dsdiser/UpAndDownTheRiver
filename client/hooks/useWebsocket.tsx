@@ -1,15 +1,14 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
+import { pushIncomingAtom } from '../state/websocketAtoms';
 import {
-  pushIncomingAtom,
   IncomingMessage,
   OutgoingMessage,
   MessageType,
-  FlipStartMessage,
   PresenceMessage,
   GameStartMessage,
-} from '../state/websocketAtoms';
-import { activeFlipperUserIdAtom, seedAtom, seedStore, startFlipAtom } from '../state/coinAtoms';
+} from '../../types/messages';
+import { activeFlipperUserIdAtom, seedAtom, seedStore } from '../state/coinAtoms';
 import { gameStateAtom } from '../state/gameStateAtom';
 import { GameState } from '../types/gameState';
 import { hc } from 'hono/client';
@@ -29,7 +28,6 @@ const maxReconnectInterval = 30000; // Maximum delay in milliseconds
 export function useWebsocket(roomId: string) {
   const wsRef = useRef<WebSocket | null>(null);
   const user = useAtomValue(userAtom);
-  const setStartFlip = useSetAtom(startFlipAtom);
   const setSeed = useSetAtom(seedAtom);
   const setPushIncoming = useSetAtom(pushIncomingAtom);
   const setRoomMembers = useSetAtom(roomMembersAtom);
@@ -54,14 +52,7 @@ export function useWebsocket(roomId: string) {
           seedStore.set(seedAtom, startMessage.seed);
           setGameState(GameState.DealingCards);
           break;
-        case MessageType.FlipStart:
-          let message = parsedMessage as FlipStartMessage;
-          setSeed(message.seed);
-          seedStore.set(seedAtom, message.seed);
-          setActiveFlipperUserId(message.userId);
-          setStartFlip(true);
-          break;
-        case MessageType.FlipResult:
+        case MessageType.GameEnd:
           break;
         default:
           // Unknown type - still forward as an extensible message
@@ -69,7 +60,7 @@ export function useWebsocket(roomId: string) {
       }
       setPushIncoming(parsedMessage);
     },
-    [setPushIncoming, setStartFlip, setSeed, setRoomMembers, setActiveFlipperUserId, setGameState]
+    [setPushIncoming, setSeed, setRoomMembers, setActiveFlipperUserId, setGameState]
   );
 
   const connectWebsocket = useCallback(() => {
@@ -130,27 +121,30 @@ export function useWebsocket(roomId: string) {
     };
   }, [connectWebsocket]);
 
-  const send = useCallback((message: OutgoingMessage) => {
-    if (wsRef.current?.readyState !== WebSocket.OPEN) {
-      console.warn('Websocket not open, cannot send');
-      return;
-    }
-    if (!user) {
-      console.warn('No user, cannot send message');
-      return;
-    }
+  const send = useCallback(
+    (message: OutgoingMessage) => {
+      if (wsRef.current?.readyState !== WebSocket.OPEN) {
+        console.warn('Websocket not open, cannot send');
+        return;
+      }
+      if (!user) {
+        console.warn('No user, cannot send message');
+        return;
+      }
 
-    const outgoingMessage = { ...message } as OutgoingMessage;
-    if (outgoingMessage.type === MessageType.Join) {
-      outgoingMessage.avatar = user.avatar;
-    }
-    outgoingMessage.id = createMessageId();
-    outgoingMessage.userId = user.id;
-    outgoingMessage.roomId = roomId;
-    outgoingMessage.timestamp = Date.now();
-    const stringifiedMessage = JSON.stringify(outgoingMessage);
-    wsRef.current?.send(stringifiedMessage);
-  }, [user, roomId]);
+      const outgoingMessage = { ...message } as OutgoingMessage;
+      if (outgoingMessage.type === MessageType.Join) {
+        outgoingMessage.avatar = user.avatar;
+      }
+      outgoingMessage.id = createMessageId();
+      outgoingMessage.userId = user.id;
+      outgoingMessage.roomId = roomId;
+      outgoingMessage.timestamp = Date.now();
+      const stringifiedMessage = JSON.stringify(outgoingMessage);
+      wsRef.current?.send(stringifiedMessage);
+    },
+    [user, roomId]
+  );
 
   return { send, connectionStatus: wsRef.current?.readyState || WebSocket.CLOSED };
 }
