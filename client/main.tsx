@@ -6,7 +6,6 @@ import { DiscordContextProvider, useDiscordSdk } from './hooks/useDiscordSdk';
 import { Provider as JotaiProvider, useAtomValue } from 'jotai';
 import useWebsocket from './hooks/useWebsocket';
 import DebugOverlay from './components/debug-overlay/DebugOverlay';
-import BalatroBackground from './components/balatro-background/BalatroBackground';
 import { userAtom, roomMembersAtom } from './state/userAtoms';
 import { gameStateAtom } from './state/gameStateAtom';
 import { GameState } from './types/gameState';
@@ -25,7 +24,7 @@ const App: React.FC = () => {
 
   return (
     <>
-      <BalatroBackground />
+      {/* <BalatroBackground /> */}
       <DiscordContextProvider authenticateWithDiscord={shouldAuth}>
         <RiverApp />
       </DiscordContextProvider>

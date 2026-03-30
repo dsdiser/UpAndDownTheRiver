@@ -6,12 +6,10 @@ import {
   OutgoingMessage,
   MessageType,
   PresenceMessage,
-  GameStartMessage,
   GameStateSyncMessage,
   CardPlayedMessage,
   TurnUpdateMessage,
 } from '../../types/messages';
-import { seedAtom, seedStore } from '../state/coinAtoms';
 import { gameStateAtom } from '../state/gameStateAtom';
 import { GameState } from '../types/gameState';
 import { hc } from 'hono/client';
@@ -39,7 +37,6 @@ const maxReconnectInterval = 30000; // Maximum delay in milliseconds
 export function useWebsocket(roomId: string) {
   const wsRef = useRef<WebSocket | null>(null);
   const user = useAtomValue(userAtom);
-  const setSeed = useSetAtom(seedAtom);
   const setPushIncoming = useSetAtom(pushIncomingAtom);
   const setRoomMembers = useSetAtom(roomMembersAtom);
   const setGameState = useSetAtom(gameStateAtom);
@@ -50,22 +47,20 @@ export function useWebsocket(roomId: string) {
   const setCurrentTrick = useSetAtom(currentTrickAtom);
   const setScores = useSetAtom(scoresAtom);
 
+  // High level approach here:
+  // Websocket message comes in, a specific handler is invoked and updates relevant atoms.
+  // Each component that uses those atoms gets rerendered with that state.
   const handleMessage = useCallback(
     (parsedMessage: IncomingMessage) => {
       // Set specific atoms based on the message type, then push to specific atoms for handling
       // We can then use the atoms directly or use atomWithListeners to use a callback
       switch (parsedMessage.type) {
-        case MessageType.Join:
-          // No specific handling needed for Join messages currently
-          break;
         case MessageType.Presence:
           const members = (parsedMessage as PresenceMessage).members as Array<RemoteMember>;
           setRoomMembers(members);
           break;
         case MessageType.GameStart:
-          const startMessage = parsedMessage as GameStartMessage;
-          setSeed(startMessage.seed);
-          seedStore.set(seedAtom, startMessage.seed);
+          // const startMessage = parsedMessage as GameStartMessage;
           setGameState(GameState.DealingCards);
           break;
         case MessageType.GameStateSync:
@@ -109,15 +104,13 @@ export function useWebsocket(roomId: string) {
           break;
         case MessageType.GameEnd:
           break;
-        default:
-          // Unknown type - still forward as an extensible message
+        case MessageType.Join:
           break;
       }
       setPushIncoming(parsedMessage);
     },
     [
       setPushIncoming,
-      setSeed,
       setRoomMembers,
       setGameState,
       setActivePlayerId,
@@ -137,6 +130,8 @@ export function useWebsocket(roomId: string) {
     wsRef.current = ws;
 
     ws.onopen = () => {
+      // This will either join an existing unstarted room or a started room
+      // If we join a started room we should expect a GameStateSync message that will get handled above
       send({ type: MessageType.Join, roomId });
     };
 
