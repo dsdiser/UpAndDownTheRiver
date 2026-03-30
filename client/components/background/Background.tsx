@@ -13,13 +13,12 @@ const vertexShader = `
 `;
 
 const fragmentShader = `
+  # define LOOP_COUNT 50 // max loop count for belts, they're dynamic so this is the full max
   precision highp float;
-
   uniform vec3 iResolution;
+  uniform int iBeltCount;
   uniform float iTime;
   varying vec2 vUv;
-
-  #define NUM_BELTS 32
 
   const vec3 red    = vec3(0.816, 0.325, 0.227);
   const vec3 green  = vec3(0.584, 0.639, 0.38);
@@ -40,7 +39,7 @@ const fragmentShader = `
   }
 
   float pattern(int i, vec2 p) {
-    i = i % 4;
+    i = int(mod(float(i), 4.0));
     float s = (p.x - p.y) / sqrt(2.0);
     if (0 == i) {
       return high_between(mod(s, 0.03), 0.2 * 0.03, 0.55 * 0.03);
@@ -56,7 +55,10 @@ const fragmentShader = `
     if (3 == i) {
       mat2 rot = sqrt(2.0) / 2.0 * mat2( 1.0, -1.0,
                                          1.0,  1.0);
-      vec2 dot_center = transpose(rot) * round(rot * p * 100.0) / 100.0;
+      mat2 rotT = mat2(rot[0][0], rot[1][0], rot[0][1], rot[1][1]);
+      vec2 rot_p = rot * p * 100.0;
+      vec2 rounded = vec2(floor(rot_p.x + 0.5), floor(rot_p.y + 0.5));
+      vec2 dot_center = rotT * rounded / 100.0;
       float dot_radius = mix(rand(dot_center.x + dot_center.y), 1.0, 0.8) * 0.003;
       return high_between(length(dot_center - p), dot_radius, 100.0);
     }
@@ -124,8 +126,8 @@ const fragmentShader = `
   }
 
   void main() {
-    vec2 fragCoord = vUv * iResolution;
-    vec2 p = (2.0 * fragCoord - iResolution) / iResolution.x;
+    vec2 fragCoord = vUv * iResolution.xy;
+    vec2 p = (2.0 * fragCoord - iResolution.xy) / iResolution.x;
 
     p += vec2(sin(p.x * 64.0 + p.y * 128.0) * 0.000625,
               sin(p.y * 64.0 + p.x * 32.0) * 0.000625);
@@ -135,8 +137,11 @@ const fragmentShader = `
     float outline = 0.0;
     float id = -1.0;
 
-    for (int i = 0; i < NUM_BELTS; ++i) {
+    for (int i = 0; i < LOOP_COUNT; ++i) {
+      // beltCount is dynamic so we need to break manually
+      // LOOP_COUNT is just a max cap for compilation
       float t = iTime + float(i * 16) + 1024.0;
+      if (i >= iBeltCount) break; 
       vec2 p0 = vec2(-1.5, sin(t * 0.02));
       vec2 p1 = vec2(sin(t * 0.1) * 0.1, sin(t * 0.07) * 0.7);
       vec2 p2 = vec2(1.5, sin(t * 0.03));
@@ -212,6 +217,7 @@ const Background: React.FC = () => {
       uniforms: {
         iTime: { value: 0 },
         iResolution: { value: [window.innerWidth, window.innerHeight, 1] },
+        iBeltCount: { value: 32 },
       },
     });
 
