@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef } from 'react';
 import { Camera, Geometry, Mesh, Program, Renderer } from 'ogl';
 import styles from './Background.module.css';
 
+// Shader code from https://www.shadertoy.com/view/lsdBDS with some modifications for dynamic belt
 const vertexShader = `
   attribute vec2 position;
   varying vec2 vUv;
@@ -140,8 +141,8 @@ const fragmentShader = `
     for (int i = 0; i < LOOP_COUNT; ++i) {
       // beltCount is dynamic so we need to break manually
       // LOOP_COUNT is just a max cap for compilation
-      float t = iTime + float(i * 16) + 1024.0;
       if (i >= iBeltCount) break; 
+      float t = iTime + float(i * 16) + 1024.0;
       vec2 p0 = vec2(-1.5, sin(t * 0.02));
       vec2 p1 = vec2(sin(t * 0.1) * 0.1, sin(t * 0.07) * 0.7);
       vec2 p2 = vec2(1.5, sin(t * 0.03));
@@ -217,7 +218,7 @@ const Background: React.FC = () => {
       uniforms: {
         iTime: { value: 0 },
         iResolution: { value: [window.innerWidth, window.innerHeight, 1] },
-        iBeltCount: { value: 32 },
+        iBeltCount: { value: 5 },
       },
     });
 
@@ -241,14 +242,33 @@ const Background: React.FC = () => {
     frameId = requestAnimationFrame(animate);
     window.addEventListener('resize', resize);
 
+    const incrementLoopCount = (e: Event) => {
+      program.uniforms.iBeltCount.value = program.uniforms.iBeltCount.value + 1;
+    };
+    window.addEventListener('loopcount', incrementLoopCount);
+
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener('resize', resize);
+      window.removeEventListener('loopcount', incrementLoopCount);
       if (gl.canvas.parentNode) gl.canvas.parentNode.removeChild(gl.canvas);
     };
   }, []);
 
-  return <div className={styles.background} ref={containerRef} />;
+  return (
+    <>
+      <div className={styles.background} ref={containerRef} />
+      <button
+        className={styles.debugButton}
+        onClick={() => {
+          const event = new Event('loopcount');
+          window.dispatchEvent(event);
+        }}
+      >
+        Increment loop count
+      </button>
+    </>
+  );
 };
 
 export default Background;
