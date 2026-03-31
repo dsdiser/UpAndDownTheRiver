@@ -14,7 +14,7 @@ const vertexShader = `
 `;
 
 const fragmentShader = `
-  # define LOOP_COUNT 50 // max loop count for belts, they're dynamic so this is the full max
+  # define LOOP_COUNT 32 // max loop count for belts, they're dynamic so this is the full max
   precision highp float;
   uniform vec3 iResolution;
   uniform int iBeltCount;
@@ -32,6 +32,9 @@ const fragmentShader = `
     return fract(sin(x) * 43758.5453);
   }
 
+  // Helper function that returns 1 if f is between
+  // lo and hi, and 0 otherwise. The transition between
+  // 0 and 1 is smoothed to about 2 pixels.
   float high_between(float f, float lo, float hi) {
     float d = 2.0 / iResolution.x;
     float rad = (hi - lo) / 2.0;
@@ -92,7 +95,7 @@ const fragmentShader = `
     return sign(f) * pow(abs(f), 1.0 / 3.0);
   }
 
-  float bezier(vec2 a, vec2 b, vec2 c, vec2 p) {
+  float bezier(vec2 a, vec2 b, vec2 c, vec2 p) { // from https://www.shadertoy.com/view/lsdBDS
     vec2 ny = normalize(a - 2.0 * b + c);
     vec2 nx = vec2(ny.y, -ny.x);
     float xa = dot(a - b, ny) / dot(a - b, nx) / 2.0;
@@ -128,10 +131,13 @@ const fragmentShader = `
 
   void main() {
     vec2 fragCoord = vUv * iResolution.xy;
+    // (0,0) at the center, -1 left, 1 right, -1 bottom, 1 top.
     vec2 p = (2.0 * fragCoord - iResolution.xy) / iResolution.x;
-
+    // add two levels of noise to the pixel position:
+    // 1. some coarse noise to make the likes look more hand-drawn.
     p += vec2(sin(p.x * 64.0 + p.y * 128.0) * 0.000625,
               sin(p.y * 64.0 + p.x * 32.0) * 0.000625);
+    // 2. some fine noise to make the edges look more like ink on paper.
     p += vec2(rand(p.x * 31.0 + p.y * 87.0) * 0.001,
               rand(p.x * 11.0 + p.y * 67.0) * 0.001);
 
@@ -187,6 +193,7 @@ const fragmentShader = `
     vec3 fg = id >= 0.0 ? getFgColor(int(id) / 4) : white;
     vec3 bg = id >= 0.0 ? getBgColor(int(id) / 4) : white;
     vec3 color = mix(mix(fg, bg, pattern(int(id), p)), black, outline);
+    // Some noise to make it look more paper-y
     color *= 0.95 + rand(p.x + p.y) * 0.1;
     gl_FragColor = vec4(color, 1.0);
   }
@@ -242,15 +249,16 @@ const Background: React.FC = () => {
     frameId = requestAnimationFrame(animate);
     window.addEventListener('resize', resize);
 
-    const incrementLoopCount = (e: Event) => {
+    const incrementBeltCount = (_e: Event) => {
+      // TODO: make this change off of the round count, emit a custom event with the number
       program.uniforms.iBeltCount.value = program.uniforms.iBeltCount.value + 1;
     };
-    window.addEventListener('loopcount', incrementLoopCount);
+    window.addEventListener('loopcount', incrementBeltCount);
 
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener('resize', resize);
-      window.removeEventListener('loopcount', incrementLoopCount);
+      window.removeEventListener('loopcount', incrementBeltCount);
       if (gl.canvas.parentNode) gl.canvas.parentNode.removeChild(gl.canvas);
     };
   }, []);
