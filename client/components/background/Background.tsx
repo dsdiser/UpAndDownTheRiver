@@ -27,6 +27,10 @@ const fragmentShader = `
   const vec3 yellow = vec3(0.843, 0.725, 0.353);
   const vec3 white  = vec3(0.91,  0.804, 0.596);
   const vec3 black  = vec3(0.125, 0.098, 0.078);
+  const vec3 orange = vec3(0.922, 0.608, 0.267);
+  const vec3 purple = vec3(0.569, 0.431, 0.647);
+  const vec3 pink   = vec3(0.918, 0.533, 0.596);
+  const vec3 teal   = vec3(0.427, 0.702, 0.690);
 
   float rand(float x) {
     return fract(sin(x) * 43758.5453);
@@ -73,21 +77,23 @@ const fragmentShader = `
     if (index == 0) return blue;
     if (index == 1) return red;
     if (index == 2) return green;
-    if (index == 3) return green;
+    if (index == 3) return orange;
     if (index == 4) return yellow;
-    if (index == 5) return blue;
-    if (index == 6) return red;
-    return green;
+    if (index == 5) return purple;
+    if (index == 6) return pink;
+    if (index == 7) return teal;
+    return blue;
   }
 
   vec3 getBgColor(int index) {
     if (index == 0) return red;
     if (index == 1) return yellow;
-    if (index == 2) return yellow;
+    if (index == 2) return orange;
     if (index == 3) return blue;
     if (index == 4) return white;
     if (index == 5) return white;
     if (index == 6) return white;
+    if (index == 7) return white;
     return white;
   }
 
@@ -194,7 +200,7 @@ const fragmentShader = `
     vec3 bg = id >= 0.0 ? getBgColor(int(id) / 4) : white;
     vec3 color = mix(mix(fg, bg, pattern(int(id), p)), black, outline);
     // Some noise to make it look more paper-y
-    color *= 0.95 + rand(p.x + p.y) * 0.1;
+    // color *= 0.995 + rand(p.x + p.y) * 0.1;
     gl_FragColor = vec4(color, 1.0);
   }
 `;
