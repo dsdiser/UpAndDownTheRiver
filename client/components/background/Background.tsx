@@ -139,6 +139,7 @@ const fragmentShader = `
     vec2 fragCoord = vUv * iResolution.xy;
     // (0,0) at the center, -1 left, 1 right, -1 bottom, 1 top.
     vec2 p = (2.0 * fragCoord - iResolution.xy) / iResolution.x;
+    p.y *= min(1.0, iResolution.x / iResolution.y);
     // add two levels of noise to the pixel position:
     // 1. some coarse noise to make the likes look more hand-drawn.
     p += vec2(sin(p.x * 64.0 + p.y * 128.0) * 0.000625,
