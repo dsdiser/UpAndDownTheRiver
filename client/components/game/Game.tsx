@@ -18,7 +18,6 @@ const Game: React.FC = () => {
   return (
     <div className={styles.gameScreen}>
       <Hand />
-
       {waitingPlayers.length > 0 && <WaitingPlayers players={waitingPlayers} />}
     </div>
   );

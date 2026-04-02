@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useContext } from 'react';
 import { useAtomValue } from 'jotai';
 import styles from './Hand.module.css';
 import { Card } from '../card/Card';
@@ -11,7 +11,8 @@ import {
 import { userAtom } from '../../state/userAtoms';
 import type { CardFace } from '../../types/cards';
 import { allPlayingCards } from '../../types/cards';
-import { usePlayCard } from '../../hooks/usePlayCard';
+import { WebsocketContext } from '../../context/WebsocketContext';
+import { MessageType } from '../../../types/messages';
 
 type SortKey = 'rank' | 'suit';
 type SortDirection = 'asc' | 'desc';
@@ -39,13 +40,12 @@ export const Hand: React.FC = () => {
   const activePlayerId = useAtomValue(activePlayerIdAtom);
   const currentTrick = useAtomValue(currentTrickAtom);
   const trumpCard = useAtomValue(trumpCardAtom);
+  const send = useContext(WebsocketContext);
 
   const [sortKey, setSortKey] = useState<SortKey>('rank');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const isPlayerActive = user?.id === activePlayerId;
-
-  const playCard = usePlayCard();
 
   /**
    * Helper to extract played card info
@@ -57,6 +57,16 @@ export const Hand: React.FC = () => {
     const suit = firstCard.split('_')[0]; // e.g., "hearts" from "hearts_K"
     return suit;
   }, [currentTrick]);
+
+  const playCard = useCallback(
+    (cardFace: CardFace) => {
+      send({
+        type: MessageType.CardPlayRequest,
+        card: cardFace,
+      });
+    },
+    [send]
+  );
 
   /**
    * Get the rank sorting order
