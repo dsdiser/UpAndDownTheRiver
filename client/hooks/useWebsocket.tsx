@@ -4,11 +4,13 @@ import { pushIncomingAtom } from '../state/websocketAtoms';
 import {
   IncomingMessage,
   OutgoingMessage,
+  ClientOutgoingMessage,
   MessageType,
   PresenceMessage,
   GameStateSyncMessage,
   CardPlayedMessage,
   TurnUpdateMessage,
+  BetPlacedMessage,
 } from '../../types/messages';
 import { gameStateAtom } from '../state/gameStateAtom';
 import { GameState } from '../types/gameState';
@@ -24,6 +26,9 @@ import {
   currentTrickAtom,
   scoresAtom,
   trumpCardAtom,
+  playerBetsAtom,
+  currentUserBetAtom,
+  handSizeAtom,
 } from '../state/gameAtoms';
 import { getProxiedUrl } from '../utils/url-proxy';
 
@@ -48,6 +53,9 @@ export function useWebsocket(roomId: string) {
   const setCurrentTrick = useSetAtom(currentTrickAtom);
   const setScores = useSetAtom(scoresAtom);
   const setTrumpCard = useSetAtom(trumpCardAtom);
+  const setPlayerBets = useSetAtom(playerBetsAtom);
+  const setCurrentUserBet = useSetAtom(currentUserBetAtom);
+  const setHandSize = useSetAtom(handSizeAtom);
 
   // High level approach here:
   // Websocket message comes in, a specific handler is invoked and updates relevant atoms.
@@ -63,7 +71,7 @@ export function useWebsocket(roomId: string) {
           break;
         case MessageType.GameStart:
           // const startMessage = parsedMessage as GameStartMessage;
-          setGameState(GameState.DealingCards);
+          setGameState(GameState.Betting);
           break;
         case MessageType.GameStateSync:
           const syncMessage = parsedMessage as GameStateSyncMessage;
@@ -74,6 +82,11 @@ export function useWebsocket(roomId: string) {
           setCurrentTrick(syncMessage.trick);
           setScores(syncMessage.scores);
           setTrumpCard(syncMessage.trumpCard);
+          setHandSize(syncMessage.handSize);
+          if (syncMessage.playerBets) {
+            setPlayerBets(syncMessage.playerBets);
+            setCurrentUserBet(syncMessage.playerBets[user?.id ?? ''] ?? null);
+          }
           if (syncMessage.playerHands && user) {
             setPlayerHand(syncMessage.playerHands[user.id] ?? []);
           }
@@ -100,6 +113,15 @@ export function useWebsocket(roomId: string) {
             });
           }
           break;
+        case MessageType.BetPlaced:
+          const betMessage = parsedMessage as BetPlacedMessage;
+          setPlayerBets(betMessage.playerBets);
+          // If all bets are placed, transition to playing phase
+          if (betMessage.allBetsPlaced) {
+            setGameState(GameState.PlayingTricks);
+            setCurrentUserBet(null);
+          }
+          break;
         case MessageType.TurnUpdate:
           const turnMessage = parsedMessage as TurnUpdateMessage;
           setActivePlayerId(turnMessage.userId);
@@ -123,6 +145,9 @@ export function useWebsocket(roomId: string) {
       setCurrentTrick,
       setScores,
       setTrumpCard,
+      setPlayerBets,
+      setCurrentUserBet,
+      setHandSize,
       user,
     ]
   );
@@ -187,7 +212,7 @@ export function useWebsocket(roomId: string) {
   }, [connectWebsocket]);
 
   const send = useCallback(
-    (message: OutgoingMessage) => {
+    (message: ClientOutgoingMessage) => {
       if (wsRef.current?.readyState !== WebSocket.OPEN) {
         console.warn('Websocket not open, cannot send');
         return;

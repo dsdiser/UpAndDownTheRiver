@@ -8,3 +8,6 @@ export const playedCardsAtom = atom<PlayedCard[]>([]);
 export const currentTrickAtom = atom<PlayedCard[]>([]);
 export const scoresAtom = atom<Record<string, number>>({});
 export const trumpCardAtom = atom<CardFace | null>(null);
+export const playerBetsAtom = atom<Record<string, number | null>>({});
+export const currentUserBetAtom = atom<number | null>(null);
+export const handSizeAtom = atom<number>(0);

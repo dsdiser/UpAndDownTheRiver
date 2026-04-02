@@ -9,6 +9,7 @@ import type {
   GameStateSyncMessage,
   CardPlayedMessage,
   GameStartMessage,
+  BetPlacedMessage,
 } from '../../types/messages';
 import { GameState } from '../../client/types/gameState';
 import { MersenneTwister19937, shuffle } from 'random-js';
@@ -36,6 +37,7 @@ export type RoomGameState = {
   turnOrder: string[];
   activePlayerId: string | null;
   scores: Record<string, number>;
+  playerBets: Record<string, number | null>;
   lastUpdated: number;
 };
 
@@ -91,6 +93,17 @@ export function isCardPlayRequestMessage(value: unknown): value is CardPlayReque
   );
 }
 
+export function isBetPlacedMessage(value: unknown): value is BetPlacedMessage {
+  return (
+    isRecord(value) &&
+    value.type === MessageType.BetPlaced &&
+    isString(value.userId) &&
+    isString(value.roomId) &&
+    isNumber(value.bet) &&
+    isString(value.id)
+  );
+}
+
 export function seededShuffle<T>(items: T[], seed: number): T[] {
   const engine = MersenneTwister19937.seed(seed);
   return shuffle(engine, [...items]);
@@ -117,8 +130,14 @@ export function buildInitialGameState(
   const trumpCard = drawPile.length > 0 ? drawPile[0] : null;
   const remainingDrawPile = trumpCard ? drawPile.slice(1) : drawPile;
 
+  // Initialize playerBets with all players having null (not yet placed)
+  const playerBets: Record<string, number | null> = {};
+  for (const playerId of turnOrder) {
+    playerBets[playerId] = null;
+  }
+
   return {
-    phase: GameState.DealingCards,
+    phase: GameState.Betting,
     seed,
     roundNumber: 1,
     handSize,
@@ -137,6 +156,7 @@ export function buildInitialGameState(
       acc[id] = 0;
       return acc;
     }, {}),
+    playerBets,
     lastUpdated: Date.now(),
   };
 }
@@ -165,6 +185,7 @@ export function buildGameStateSyncMessage(
       Object.entries(gameState.playerHands).map(([playerId, hand]) => [playerId, hand.length])
     ),
     scores: gameState.scores,
+    playerBets: gameState.playerBets,
     playerHands: gameState.playerHands,
   };
 }
@@ -184,5 +205,24 @@ export function buildCardPlayedMessage(
     activePlayerId: gameState.activePlayerId,
     trick: gameState.currentTrick,
     remainingHandCount: gameState.playerHands[playedCard.userId]?.length ?? 0,
+  };
+}
+
+export function buildBetPlacedMessage(
+  roomId: string,
+  userId: string,
+  bet: number,
+  playerBets: Record<string, number | null>,
+  allBetsPlaced?: boolean
+): BetPlacedMessage {
+  return {
+    type: MessageType.BetPlaced,
+    userId,
+    roomId,
+    id: `${roomId}:${Date.now()}`,
+    timestamp: Date.now(),
+    bet,
+    playerBets,
+    allBetsPlaced,
   };
 }

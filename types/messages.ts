@@ -4,6 +4,8 @@ export enum MessageType {
   Join = 'join',
   GameStart = 'game:start',
   GameStateSync = 'game:state:sync',
+  BetPlaced = 'bet:placed',
+  BettingComplete = 'betting:complete',
   CardPlayRequest = 'card:play:request',
   CardPlayed = 'card:played',
   TurnUpdate = 'game:turn:update',
@@ -70,7 +72,21 @@ export interface GameStateSyncMessage extends BaseMessage {
   playedCards: PlayedCard[];
   playerHandSizes: Record<string, number>;
   scores: Record<string, number>;
+  playerBets?: Record<string, number | null>;
   playerHands?: Record<string, CardFace[]>;
+}
+
+export interface BetPlacedMessage extends BaseMessage {
+  type: MessageType.BetPlaced;
+  bet: number;
+  playerBets: Record<string, number | null>;
+  allBetsPlaced?: boolean;
+}
+
+export interface BettingCompleteMessage extends BaseMessage {
+  type: MessageType.BettingComplete;
+  playerBets: Record<string, number>;
+  activePlayerId: string | null;
 }
 
 export interface CardPlayRequestMessage extends BaseMessage {
@@ -96,6 +112,8 @@ export type IncomingMessage =
   | JoinMessage
   | GameStartMessage
   | GameStateSyncMessage
+  | BetPlacedMessage
+  | BettingCompleteMessage
   | CardPlayRequestMessage
   | CardPlayedMessage
   | TurnUpdateMessage
@@ -104,3 +122,28 @@ export type IncomingMessage =
   | ({ type: string } & Record<string, unknown>);
 
 export type OutgoingMessage = IncomingMessage | ({ type: string } & Record<string, unknown>);
+
+/**
+ * Client-side message types - userId, roomId, timestamp, and id are automatically added by send function
+ */
+export interface ClientJoinMessage {
+  type: MessageType.Join;
+  avatar?: string;
+  roomMembers?: string[];
+}
+
+export interface ClientBetPlacedMessage {
+  type: MessageType.BetPlaced;
+  bet: number;
+}
+
+export interface ClientCardPlayRequestMessage {
+  type: MessageType.CardPlayRequest;
+  card: CardFace;
+}
+
+export type ClientOutgoingMessage =
+  | ClientJoinMessage
+  | ClientBetPlacedMessage
+  | ClientCardPlayRequestMessage
+  | ({ type: string } & Record<string, unknown>);

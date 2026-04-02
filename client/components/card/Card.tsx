@@ -25,6 +25,7 @@ interface CardProps {
  *
  * Disabled cards are greyed out and show tooltip explaining why.
  * Cards animate out when played successfully.
+ * Cards cannot be played during betting phase.
  */
 export const Card: React.FC<CardProps> = ({
   cardFace,
@@ -50,6 +51,7 @@ export const Card: React.FC<CardProps> = ({
   }, []);
 
   const handleClick = useCallback(() => {
+    // During betting phase, cards cannot be played
     // If card can't be played, don't do anything
     if (!canPlay || isAnimatingOut) {
       return;

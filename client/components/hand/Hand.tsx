@@ -13,6 +13,8 @@ import type { CardFace } from '../../types/cards';
 import { allPlayingCards } from '../../types/cards';
 import { WebsocketContext } from '../../context/WebsocketContext';
 import { MessageType } from '../../../types/messages';
+import { gameStateAtom } from '../../state/gameStateAtom';
+import { GameState } from '../../types/gameState';
 
 type SortKey = 'rank' | 'suit';
 type SortDirection = 'asc' | 'desc';
@@ -41,6 +43,7 @@ export const Hand: React.FC = () => {
   const currentTrick = useAtomValue(currentTrickAtom);
   const trumpCard = useAtomValue(trumpCardAtom);
   const send = useContext(WebsocketContext);
+  const gameState = useAtomValue(gameStateAtom);
 
   const [sortKey, setSortKey] = useState<SortKey>('rank');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -89,6 +92,13 @@ export const Hand: React.FC = () => {
    */
   const getPlayableStatusForCard = useCallback(
     (card: CardFace): CardPlayableStatus => {
+      if (gameState === GameState.Betting) {
+        return {
+          card,
+          canPlay: false,
+          reason: 'Cannot play cards during betting phase',
+        };
+      }
       if (!isPlayerActive) {
         return {
           card,

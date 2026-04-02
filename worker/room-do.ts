@@ -1,6 +1,11 @@
 import { DurableObjectClass, DurableObjectState, WebSocket } from '@cloudflare/workers-types';
 import { MessageType } from '../types/messages';
-import type { PlayedCard, GameStartMessage, CardPlayRequestMessage } from '../types/messages';
+import type {
+  PlayedCard,
+  GameStartMessage,
+  CardPlayRequestMessage,
+  BetPlacedMessage,
+} from '../types/messages';
 import {
   RoomMember,
   RoomGameState,
@@ -8,12 +13,15 @@ import {
   isJoinMessage,
   isGameStartMessage,
   isCardPlayRequestMessage,
+  isBetPlacedMessage,
   gameStateKey,
   buildInitialGameState,
   buildGameStateSyncMessage,
   buildCardPlayedMessage,
+  buildBetPlacedMessage,
   isString,
 } from './helpers/room-do-helpers';
+import { GameState } from '../client/types/gameState';
 
 type AnyRecord = Record<string, unknown>;
 
@@ -91,12 +99,66 @@ export class RoomDO implements DurableObjectClass {
     );
   }
 
+  private async handleBetPlaced(msg: BetPlacedMessage) {
+    const { roomId, userId, bet } = msg;
+    if (!this.hasMember(roomId, userId)) return;
+
+    const gameState = await this.getRoomGameState(roomId);
+    if (!gameState) return;
+
+    // Only accept bets during betting phase
+    if (gameState.phase !== GameState.Betting) {
+      console.warn('Attempted to place bet outside of betting phase');
+      return;
+    }
+
+    // Validate bet is within range
+    if (bet < 0 || bet > gameState.handSize) {
+      console.warn(`Invalid bet amount: ${bet} (valid range: 0-${gameState.handSize})`);
+      return;
+    }
+
+    // Store the bet
+    gameState.playerBets[userId] = bet;
+
+    // Check if all bets are placed
+    const allBetsPlaced = gameState.turnOrder.every(
+      (playerId) => gameState.playerBets[playerId] !== null
+    );
+
+    // If all bets are placed, transition to playing phase
+    if (allBetsPlaced) {
+      gameState.phase = GameState.PlayingTricks;
+      gameState.activePlayerId = gameState.turnOrder[0]; // First player starts
+    }
+
+    // Save the updated state
+    await this.saveRoomGameState(roomId, gameState);
+
+    // Broadcast the bet to all players with allBetsPlaced flag
+    const betMessage = buildBetPlacedMessage(
+      roomId,
+      userId,
+      bet,
+      gameState.playerBets,
+      allBetsPlaced
+    );
+    this.broadcast(roomId, JSON.stringify(betMessage));
+  }
+
   private async handleCardPlayRequest(msg: CardPlayRequestMessage) {
     const { roomId, userId, card } = msg;
     if (!this.hasMember(roomId, userId)) return;
 
     const gameState = await this.getRoomGameState(roomId);
     if (!gameState) return;
+
+    // Cannot play cards during betting phase
+    if (gameState.phase === GameState.Betting) {
+      console.warn('Attempted to play card during betting phase');
+      return;
+    }
+
     if (gameState.activePlayerId !== userId) return;
     const hand = gameState.playerHands[userId] || [];
     const cardIndex = hand.indexOf(card);
@@ -182,6 +244,8 @@ export class RoomDO implements DurableObjectClass {
 
       if (msg.type == MessageType.GameStart && isGameStartMessage(msg)) {
         await this.handleGameStart(msg);
+      } else if (msg.type == MessageType.BetPlaced && isBetPlacedMessage(msg)) {
+        await this.handleBetPlaced(msg);
       } else if (msg.type == MessageType.CardPlayRequest && isCardPlayRequestMessage(msg)) {
         await this.handleCardPlayRequest(msg);
       } else {
@@ -224,6 +288,9 @@ export class RoomDO implements DurableObjectClass {
       if (!member) continue;
       set.delete(member);
       if (set.size === 0) {
+        // delete the game state from memory and storage if no members are left in the room
+        this.roomStates.delete(roomId);
+        this.state.storage.delete(gameStateKey(roomId));
         this.connections.delete(roomId);
       }
       this.broadcast(
@@ -257,6 +324,11 @@ export class RoomDO implements DurableObjectClass {
         set.delete(member);
       }
     }
-    if (set.size === 0) this.connections.delete(roomId);
+    if (set.size === 0) {
+      // delete the game state from memory and storage if no members are left in the room
+      this.roomStates.delete(roomId);
+      this.state.storage.delete(gameStateKey(roomId));
+      this.connections.delete(roomId);
+    }
   }
 }
