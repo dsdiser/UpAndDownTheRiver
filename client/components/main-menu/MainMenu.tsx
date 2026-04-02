@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import styles from './MainMenu.module.css';
 import { roomMembersAtom } from '../../state/userAtoms';
-import { MessageType, OutgoingMessage } from '../../../types/messages';
+import { MessageType } from '../../../types/messages';
 import { useAtomValue } from 'jotai';
+import { WebsocketContext } from '../../context/WebsocketContext';
 
 interface MainMenuProps {
-  send: (message: OutgoingMessage) => void;
   isConnected: boolean;
 }
 
-const MainMenu: React.FC<MainMenuProps> = ({ send, isConnected }) => {
+const MainMenu: React.FC<MainMenuProps> = ({ isConnected }) => {
+  const send = useContext(WebsocketContext);
   const roomMembers = useAtomValue(roomMembersAtom);
   const [requestSent, setRequestSent] = useState(false);
 
   const handleStartGame = () => {
     if (!isConnected || requestSent) return;
     setRequestSent(true);
+    // Generate a random seed for reproducible shuffling
     send({ type: MessageType.GameStart });
   };
 

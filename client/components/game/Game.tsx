@@ -4,6 +4,7 @@ import styles from './Game.module.css';
 import { roomMembersAtom } from '../../state/userAtoms';
 import { playerHandSizesAtom } from '../../state/gameAtoms';
 import WaitingPlayers from '../waiting-players/WaitingPlayers';
+import Hand from '../hand/Hand';
 
 const Game: React.FC = () => {
   const roomMembers = useAtomValue(roomMembersAtom);
@@ -16,8 +17,7 @@ const Game: React.FC = () => {
 
   return (
     <div className={styles.gameScreen}>
-      <h2>Game view coming soon</h2>
-      <p>The game has started. Replace this placeholder with your actual game UI.</p>
+      <Hand />
 
       {waitingPlayers.length > 0 && <WaitingPlayers players={waitingPlayers} />}
     </div>

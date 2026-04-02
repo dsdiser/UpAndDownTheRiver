@@ -16,6 +16,7 @@ import RoomInput from './components/room-input/RoomInput';
 import MainMenu from './components/main-menu/MainMenu';
 import Game from './components/game/Game';
 import { preloadCardImages } from './types/cards';
+import { WebsocketContext } from './context/WebsocketContext';
 
 const inIframe = window.self !== window.top;
 
@@ -26,9 +27,11 @@ const App: React.FC = () => {
   return (
     <>
       <Background />
-      <DiscordContextProvider authenticateWithDiscord={shouldAuth}>
-        <RiverApp />
-      </DiscordContextProvider>
+      <JotaiProvider>
+        <DiscordContextProvider authenticateWithDiscord={shouldAuth}>
+          <RiverApp />
+        </DiscordContextProvider>
+      </JotaiProvider>
     </>
   );
 };
@@ -76,7 +79,7 @@ const RiverApp: React.FC = () => {
   }
 
   return (
-    <>
+    <WebsocketContext.Provider value={send}>
       <RoomInput initialRoomId={instanceId} />
       <AvatarOverlay
         users={roomMembers.map((m) => ({ id: m.id, avatar: m.avatar }))}
@@ -85,20 +88,18 @@ const RiverApp: React.FC = () => {
       />
       <div className={appStyles.app}>
         {gameState === GameState.WaitingForPlayers ? (
-          <MainMenu send={send} isConnected={connectionStatus === WebSocket.OPEN} />
+          <MainMenu isConnected={connectionStatus === WebSocket.OPEN} />
         ) : (
           <Game />
         )}
       </div>
-    </>
+    </WebsocketContext.Provider>
   );
 };
 
 const root = ReactDOM.createRoot(document.getElementById('app')!);
 root.render(
   <React.StrictMode>
-    <JotaiProvider>
-      <App />
-    </JotaiProvider>
+    <App />
   </React.StrictMode>
 );

@@ -23,6 +23,7 @@ import {
   playedCardsAtom,
   currentTrickAtom,
   scoresAtom,
+  trumpCardAtom,
 } from '../state/gameAtoms';
 import { getProxiedUrl } from '../utils/url-proxy';
 
@@ -46,6 +47,7 @@ export function useWebsocket(roomId: string) {
   const setPlayedCards = useSetAtom(playedCardsAtom);
   const setCurrentTrick = useSetAtom(currentTrickAtom);
   const setScores = useSetAtom(scoresAtom);
+  const setTrumpCard = useSetAtom(trumpCardAtom);
 
   // High level approach here:
   // Websocket message comes in, a specific handler is invoked and updates relevant atoms.
@@ -71,6 +73,7 @@ export function useWebsocket(roomId: string) {
           setPlayedCards(syncMessage.playedCards);
           setCurrentTrick(syncMessage.trick);
           setScores(syncMessage.scores);
+          setTrumpCard(syncMessage.trumpCard);
           if (syncMessage.playerHands && user) {
             setPlayerHand(syncMessage.playerHands[user.id] ?? []);
           }
@@ -119,6 +122,7 @@ export function useWebsocket(roomId: string) {
       setPlayedCards,
       setCurrentTrick,
       setScores,
+      setTrumpCard,
       user,
     ]
   );
@@ -202,6 +206,7 @@ export function useWebsocket(roomId: string) {
       outgoingMessage.roomId = roomId;
       outgoingMessage.timestamp = Date.now();
       const stringifiedMessage = JSON.stringify(outgoingMessage);
+      console.debug('Sending websocket message', outgoingMessage);
       wsRef.current?.send(stringifiedMessage);
     },
     [user, roomId]

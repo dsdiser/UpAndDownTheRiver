@@ -76,7 +76,6 @@ export function isGameStartMessage(value: unknown): value is GameStartMessage {
     value.type === MessageType.GameStart &&
     isString(value.userId) &&
     isString(value.roomId) &&
-    isNumber(value.seed) &&
     isString(value.id)
   );
 }

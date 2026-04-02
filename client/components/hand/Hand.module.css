@@ -1,0 +1,157 @@
+.handContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  min-height: 200px;
+}
+
+.handHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.sortControls {
+  display: flex;
+  gap: 8px;
+}
+
+.sortButton {
+  padding: 8px 12px;
+  background-color: #f0f0f0;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.sortButton:hover {
+  background-color: #e8e8e8;
+  border-color: #999;
+}
+
+.sortButton.active {
+  background-color: #4a90e2;
+  border-color: #2e5c8a;
+  color: white;
+}
+
+.sortButton.active:hover {
+  background-color: #357abd;
+}
+
+.direction {
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.hand {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  min-height: 100px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.emptyHand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  color: #999;
+  font-size: 16px;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .handContainer {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .handHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
+  .sortControls {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .sortButton {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .hand {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .handContainer {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .title {
+    font-size: 14px;
+  }
+
+  .sortControls {
+    width: 100%;
+    gap: 6px;
+  }
+
+  .sortButton {
+    flex: 1;
+    padding: 7px 8px;
+    font-size: 12px;
+  }
+
+  .direction {
+    font-size: 11px;
+  }
+
+  .hand {
+    gap: 8px;
+    min-height: 80px;
+  }
+
+  .emptyHand {
+    min-height: 80px;
+    font-size: 14px;
+  }
+}

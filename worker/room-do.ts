@@ -66,7 +66,7 @@ export class RoomDO implements DurableObjectClass {
   }
 
   private async handleGameStart(msg: GameStartMessage) {
-    const { roomId, seed, userId } = msg;
+    const { roomId, userId } = msg;
     if (!this.hasMember(roomId, userId)) return;
 
     const existingState = await this.getRoomGameState(roomId);
@@ -74,10 +74,10 @@ export class RoomDO implements DurableObjectClass {
       this.broadcast(roomId, JSON.stringify(buildGameStateSyncMessage(roomId, existingState)));
       return;
     }
-
+    const seed = Math.floor(Math.random() * 1_000_000);
     const gameState = buildInitialGameState(roomId, seed, this.listMembers(roomId));
     await this.saveRoomGameState(roomId, gameState);
-
+    this.broadcast(roomId, JSON.stringify(buildGameStateSyncMessage(roomId, gameState)));
     this.broadcast(
       roomId,
       JSON.stringify({
@@ -89,7 +89,6 @@ export class RoomDO implements DurableObjectClass {
         seed,
       })
     );
-    this.broadcast(roomId, JSON.stringify(buildGameStateSyncMessage(roomId, gameState)));
   }
 
   private async handleCardPlayRequest(msg: CardPlayRequestMessage) {
@@ -177,11 +176,13 @@ export class RoomDO implements DurableObjectClass {
           ws.send(JSON.stringify(buildGameStateSyncMessage(msg.roomId, gameState)));
         }
         return;
-      } else if (msg.type == MessageType.GameStart && isGameStartMessage(msg)) {
-        if (!this.hasMember(msg.roomId, msg.userId)) return;
+      }
+      // for other message types, the user must already be a member of the room
+      if (!msg.userId || !isString(msg.userId) || !this.hasMember(msg.roomId, msg.userId)) return;
+
+      if (msg.type == MessageType.GameStart && isGameStartMessage(msg)) {
         await this.handleGameStart(msg);
       } else if (msg.type == MessageType.CardPlayRequest && isCardPlayRequestMessage(msg)) {
-        if (!this.hasMember(msg.roomId, msg.userId)) return;
         await this.handleCardPlayRequest(msg);
       } else {
         // For any other message types, we just broadcast them to the room.

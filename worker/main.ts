@@ -4,10 +4,14 @@ import { WebSocketApp } from './websocket-server';
 import { RoomDO } from './room-do';
 import { logger } from 'hono/logger';
 
+const customLogger = (message: string, ...rest: string[]) => {
+  console.log(message, ...rest);
+};
+
 const APP = new Hono()
   // Mount the sub-apps at the root so the routes defined inside them
   // (like `/api/token`, `/ping`, and `/ws`) resolve to the expected paths
-  .use(logger())
+  .use(logger(customLogger))
   .route('/api', apiApp)
   .route('/ws', WebSocketApp);
 
