@@ -1,0 +1,208 @@
+.seatsContainer {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.seatsGrid {
+  width: 100%;
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 16px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+}
+
+/* Define grid areas for each seat in a circular arrangement */
+.seat[data-seat='1'] {
+  grid-area: 1 / 3;
+}
+
+.seat[data-seat='2'] {
+  grid-area: 2 / 5;
+}
+
+.seat[data-seat='3'] {
+  grid-area: 3 / 5;
+}
+
+.seat[data-seat='4'] {
+  grid-area: 4 / 4;
+}
+
+.seat[data-seat='5'] {
+  grid-area: 5 / 3;
+}
+
+.seat[data-seat='6'] {
+  grid-area: 4 / 2;
+}
+
+.seat[data-seat='7'] {
+  grid-area: 3 / 1;
+}
+
+.seat[data-seat='8'] {
+  grid-area: 2 / 1;
+}
+
+.center {
+  grid-area: 3 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  min-height: 100px;
+}
+
+/* Seat card styling */
+.seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.seat:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.seat.waiting {
+  opacity: 0.65;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.avatarContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+}
+
+.playerInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  text-align: center;
+}
+
+.playerName {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.stat {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.waitingBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255, 193, 7, 0.8);
+  color: rgba(0, 0, 0, 0.87);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Responsive design for tablets */
+@media (max-width: 768px) {
+  .seatsGrid {
+    max-width: 600px;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .seat {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .avatarContainer {
+    width: 56px;
+    height: 56px;
+  }
+
+  .playerName {
+    font-size: 12px;
+  }
+
+  .stats {
+    font-size: 10px;
+  }
+
+  .waitingBadge {
+    font-size: 8px;
+    padding: 1px 4px;
+  }
+}
+
+/* Responsive design for mobile */
+@media (max-width: 480px) {
+  .seatsGrid {
+    max-width: 100%;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .seat {
+    padding: 6px;
+    gap: 4px;
+  }
+
+  .avatarContainer {
+    width: 48px;
+    height: 48px;
+  }
+
+  .playerName {
+    font-size: 11px;
+  }
+
+  .stats {
+    font-size: 9px;
+  }
+
+  .center {
+    min-height: 80px;
+  }
+}

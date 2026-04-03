@@ -109,6 +109,42 @@ export function seededShuffle<T>(items: T[], seed: number): T[] {
   return shuffle(engine, [...items]);
 }
 
+/**
+ * Deal cards from a pile to players and determine trump card.
+ * Returns player hands, remaining draw pile (excluding trump), and trump card.
+ */
+function dealCardsFromPile(
+  cardPile: CardFace[],
+  playerIds: string[],
+  handSize: number
+): {
+  playerHands: Record<string, CardFace[]>;
+  drawPile: CardFace[];
+  trumpCard: CardFace | null;
+} {
+  const playerHands: Record<string, CardFace[]> = {};
+  let cardIndex = 0;
+
+  // Deal cards to each player
+  for (const playerId of playerIds) {
+    const cardsForPlayer: CardFace[] = [];
+    for (let i = 0; i < handSize; i++) {
+      if (cardIndex < cardPile.length) {
+        cardsForPlayer.push(cardPile[cardIndex]);
+        cardIndex++;
+      }
+    }
+    playerHands[playerId] = cardsForPlayer;
+  }
+
+  // Remaining cards become the draw pile
+  const remainingPile = cardPile.slice(cardIndex);
+  const trumpCard = remainingPile.length > 0 ? remainingPile[0] : null;
+  const drawPile = trumpCard ? remainingPile.slice(1) : remainingPile;
+
+  return { playerHands, drawPile, trumpCard };
+}
+
 export function buildInitialGameState(
   roomId: string,
   seed: number,
@@ -119,16 +155,9 @@ export function buildInitialGameState(
   const turnOrder = members.map((member) => member.id);
   const maxHandSize = Math.min(10, Math.floor(shuffledDeck.length / Math.max(turnOrder.length, 1)));
   const handSize = 1;
-  const playerHands: Record<string, CardFace[]> = {};
 
-  for (let i = 0; i < turnOrder.length; i++) {
-    const start = i * handSize;
-    playerHands[turnOrder[i]] = shuffledDeck.slice(start, start + handSize);
-  }
-
-  const drawPile = shuffledDeck.slice(handSize * turnOrder.length);
-  const trumpCard = drawPile.length > 0 ? drawPile[0] : null;
-  const remainingDrawPile = trumpCard ? drawPile.slice(1) : drawPile;
+  // Deal initial cards
+  const { playerHands, drawPile, trumpCard } = dealCardsFromPile(shuffledDeck, turnOrder, handSize);
 
   // Initialize playerBets with all players having null (not yet placed)
   const playerBets: Record<string, number | null> = {};
@@ -146,7 +175,7 @@ export function buildInitialGameState(
     trumpCard,
     sortedDeck: cardDeck,
     shuffledDeck,
-    drawPile: remainingDrawPile,
+    drawPile,
     playerHands,
     playedCards: [],
     currentTrick: [],
@@ -224,5 +253,78 @@ export function buildBetPlacedMessage(
     bet,
     playerBets,
     allBetsPlaced,
+  };
+}
+
+/**
+ * Check if a round is complete (all players have played all their cards)
+ */
+export function isRoundComplete(gameState: RoomGameState): boolean {
+  return Object.values(gameState.playerHands).every((hand) => hand.length === 0);
+}
+
+/**
+ * Deal cards for the next round, automatically handling direction changes.
+ * - If going UP and hand size < max: increase hand size
+ * - If going UP and hand size == max: switch to DOWN, decrease hand size
+ * - If going DOWN and hand size > 1: decrease hand size
+ * - If going DOWN and hand size == 1: game ends (returns null)
+ */
+export function dealCardsForRound(gameState: RoomGameState): RoomGameState | null {
+  let newHandSize = gameState.handSize;
+  let newDirection = gameState.roundDirection;
+
+  if (gameState.roundDirection === 'up') {
+    if (gameState.handSize < gameState.maxHandSize) {
+      newHandSize = gameState.handSize + 1;
+    } else {
+      // Reached max, switch to going down
+      newDirection = 'down';
+      newHandSize = gameState.maxHandSize - 1;
+    }
+  } else {
+    // roundDirection === 'down'
+    if (gameState.handSize > 1) {
+      newHandSize = gameState.handSize - 1;
+    } else {
+      // Hand size is 1 and going down - game is complete
+      return null;
+    }
+  }
+
+  // Deal cards from the draw pile
+  const cardsNeeded = gameState.turnOrder.length * newHandSize;
+  if (gameState.drawPile.length < cardsNeeded) {
+    console.warn(
+      `Not enough cards in draw pile to deal. Available: ${gameState.drawPile.length}, needed: ${cardsNeeded}`
+    );
+  }
+
+  const {
+    playerHands: newPlayerHands,
+    drawPile: newDrawPile,
+    trumpCard: newTrumpCard,
+  } = dealCardsFromPile(gameState.drawPile, gameState.turnOrder, newHandSize);
+
+  // Reset bets for new round
+  const newPlayerBets: Record<string, number | null> = {};
+  for (const playerId of gameState.turnOrder) {
+    newPlayerBets[playerId] = null;
+  }
+
+  return {
+    ...gameState,
+    phase: GameState.Betting,
+    roundNumber: gameState.roundNumber + 1,
+    handSize: newHandSize,
+    roundDirection: newDirection,
+    trumpCard: newTrumpCard,
+    drawPile: newDrawPile,
+    playerHands: newPlayerHands,
+    playedCards: [], // Clear played cards for new round
+    currentTrick: [], // Clear current trick
+    activePlayerId: gameState.turnOrder[0], // Reset to first player
+    playerBets: newPlayerBets,
+    lastUpdated: Date.now(),
   };
 }

@@ -20,6 +20,8 @@ import {
   buildCardPlayedMessage,
   buildBetPlacedMessage,
   isString,
+  isRoundComplete,
+  dealCardsForRound,
 } from './helpers/room-do-helpers';
 import { GameState } from '../client/types/gameState';
 
@@ -176,6 +178,30 @@ export class RoomDO implements DurableObjectClass {
     const currentIndex = gameState.turnOrder.indexOf(userId);
     const nextIndex = (currentIndex + 1) % gameState.turnOrder.length;
     gameState.activePlayerId = gameState.turnOrder[nextIndex];
+
+    // Check if round is complete (all hands are empty)
+    if (isRoundComplete(gameState)) {
+      const nextRoundState = dealCardsForRound(gameState);
+
+      if (nextRoundState === null) {
+        // Game has ended (going down the river and hand size was 1)
+        gameState.phase = GameState.GameEnded;
+        await this.saveRoomGameState(roomId, gameState);
+        this.broadcast(roomId, JSON.stringify(buildGameStateSyncMessage(roomId, gameState)));
+        return;
+      }
+
+      // Deal new round
+      await this.saveRoomGameState(roomId, nextRoundState);
+
+      // Broadcast the card play first
+      const playedMessage = buildCardPlayedMessage(roomId, gameState, playedCard);
+      this.broadcast(roomId, JSON.stringify(playedMessage));
+
+      // Then broadcast the new game state (with new cards dealt and moving to Betting phase)
+      this.broadcast(roomId, JSON.stringify(buildGameStateSyncMessage(roomId, nextRoundState)));
+      return;
+    }
 
     await this.saveRoomGameState(roomId, gameState);
 

@@ -81,11 +81,13 @@ const RiverApp: React.FC = () => {
   return (
     <WebsocketContext.Provider value={send}>
       <RoomInput initialRoomId={instanceId} />
-      <AvatarOverlay
-        users={roomMembers.map((m) => ({ id: m.id, avatar: m.avatar }))}
-        accessToken={accessToken}
-        discordSdk={discordSdk}
-      />
+      {gameState === GameState.WaitingForPlayers && (
+        <AvatarOverlay
+          users={roomMembers.map((m) => ({ id: m.id, avatar: m.avatar }))}
+          accessToken={accessToken}
+          discordSdk={discordSdk}
+        />
+      )}
       <div className={appStyles.app}>
         {gameState === GameState.WaitingForPlayers ? (
           <MainMenu isConnected={connectionStatus === WebSocket.OPEN} />
