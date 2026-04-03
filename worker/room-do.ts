@@ -53,6 +53,31 @@ export class RoomDO implements DurableObjectClass {
     } catch (e) {
       console.debug('RoomDO: websocket rehydration failed', e);
     }
+
+    // delete all game state from storage that don't have any active connections delete all if there are no connections at all
+    if (this.connections.size === 0) {
+      this.state.storage.deleteAll();
+      return;
+    }
+    let keysToDelete: string[] = [];
+    this.state.storage
+      .list({ allowConcurrency: true })
+      .then((stored) => {
+        for (const key of stored.keys()) {
+          if (!key.startsWith('gameState:')) continue;
+          const roomId = key.split(':')[1];
+          if (!this.connections.has(roomId)) {
+            keysToDelete.push(key);
+          }
+        }
+      })
+      .then(() => {
+        this.state.storage.delete(keysToDelete);
+        console.debug(
+          'RoomDO: deleted game state for rooms with no active connections',
+          keysToDelete
+        );
+      });
   }
 
   private async getRoomGameState(roomId: string): Promise<RoomGameState | null> {
@@ -283,11 +308,13 @@ export class RoomDO implements DurableObjectClass {
     }
   }
 
-  webSocketClose(ws: any, _code: number, _reason: string, _wasClean: boolean) {
+  webSocketClose(ws: any, code: number, reason: string, _wasClean: boolean) {
+    ws.close(code, reason);
     this.removeSocketFromAllRooms(ws);
   }
 
   webSocketError(ws: any, _error: unknown) {
+    ws.close(1011, 'Websocket error');
     this.removeSocketFromAllRooms(ws);
   }
 
