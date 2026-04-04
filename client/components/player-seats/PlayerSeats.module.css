@@ -206,3 +206,119 @@
     min-height: 80px;
   }
 }
+
+/* Betting input styles */
+.bettingSeat {
+  padding: 16px 12px !important;
+  gap: 12px !important;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(240, 46, 170, 0.1));
+  border: 2px solid rgba(102, 126, 234, 0.4);
+}
+
+.bettingInput {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  align-items: center;
+}
+
+.bettingPrompt {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.betNumberInput {
+  width: 80px;
+  padding: 8px;
+  border: 2px solid rgba(102, 126, 234, 0.5);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.betNumberInput:focus {
+  outline: none;
+  border-color: rgba(102, 126, 234, 0.8);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 12px rgba(102, 126, 234, 0.3);
+}
+
+.betNumberInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.submitBetButton {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(240, 46, 170, 0.8));
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submitBetButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 1), rgba(240, 46, 170, 0.9));
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.submitBetButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .bettingSeat {
+    padding: 12px 10px !important;
+    gap: 10px !important;
+  }
+
+  .bettingPrompt {
+    font-size: 11px;
+  }
+
+  .betNumberInput {
+    width: 70px;
+    padding: 6px;
+    font-size: 14px;
+  }
+
+  .submitBetButton {
+    padding: 5px 12px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bettingSeat {
+    padding: 10px 8px !important;
+    gap: 8px !important;
+  }
+
+  .bettingPrompt {
+    font-size: 10px;
+  }
+
+  .betNumberInput {
+    width: 60px;
+    padding: 5px;
+    font-size: 12px;
+  }
+
+  .submitBetButton {
+    padding: 4px 10px;
+    font-size: 9px;
+  }
+}

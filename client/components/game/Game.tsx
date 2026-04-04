@@ -1,14 +1,20 @@
-import React, { useMemo } from 'react';
-import { useAtomValue } from 'jotai';
+import React, { useMemo, useCallback, useContext } from 'react';
+import { useAtomValue, useSetAtom } from 'jotai';
 import styles from './Game.module.css';
 import { roomMembersAtom } from '../../state/userAtoms';
-import { playerHandSizesAtom, playerBetsAtom, scoresAtom } from '../../state/gameAtoms';
+import {
+  playerHandSizesAtom,
+  playerBetsAtom,
+  scoresAtom,
+  currentUserBetAtom,
+  handSizeAtom,
+} from '../../state/gameAtoms';
 import { gameStateAtom } from '../../state/gameStateAtom';
-import { GameState } from '../../types/gameState';
+import { WebsocketContext } from '../../context/WebsocketContext';
 import WaitingPlayers from '../waiting-players/WaitingPlayers';
 import Hand from '../hand/Hand';
-import BettingScreen from '../betting-screen/BettingScreen';
 import PlayerSeats from '../player-seats/PlayerSeats';
+import { MessageType } from '../../../types/messages';
 
 const Game: React.FC = () => {
   const roomMembers = useAtomValue(roomMembersAtom);
@@ -16,11 +22,30 @@ const Game: React.FC = () => {
   const playerBets = useAtomValue(playerBetsAtom);
   const scores = useAtomValue(scoresAtom);
   const gameState = useAtomValue(gameStateAtom);
+  const currentUserBet = useAtomValue(currentUserBetAtom);
+  const handSize = useAtomValue(handSizeAtom);
+  const setCurrentUserBet = useSetAtom(currentUserBetAtom);
+  const send = useContext(WebsocketContext);
 
   const waitingPlayers = useMemo(
     () => roomMembers.filter((member) => !(member.id in playerHandSizes)),
     [roomMembers, playerHandSizes]
   );
+
+  const handleBetChange = useCallback(
+    (newBet: number) => {
+      const clampedBet = Math.max(0, Math.min(newBet, handSize));
+      setCurrentUserBet(clampedBet);
+    },
+    [setCurrentUserBet, handSize]
+  );
+
+  const handleSubmitBet = useCallback(() => {
+    send({
+      type: MessageType.BetPlaced,
+      bet: currentUserBet,
+    });
+  }, [currentUserBet, send]);
 
   return (
     <div className={styles.gameScreen}>
@@ -29,10 +54,13 @@ const Game: React.FC = () => {
         playerHandSizes={playerHandSizes}
         playerBets={playerBets}
         scores={scores}
+        gameState={gameState}
+        currentUserBet={currentUserBet}
+        onBetChange={handleBetChange}
+        onBetSubmit={handleSubmitBet}
       />
       <Hand />
       {waitingPlayers.length > 0 && <WaitingPlayers players={waitingPlayers} />}
-      {gameState === GameState.Betting && <BettingScreen />}
     </div>
   );
 };

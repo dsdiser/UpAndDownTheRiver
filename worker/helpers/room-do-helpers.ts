@@ -269,10 +269,30 @@ export function isRoundComplete(gameState: RoomGameState): boolean {
  * - If going UP and hand size == max: switch to DOWN, decrease hand size
  * - If going DOWN and hand size > 1: decrease hand size
  * - If going DOWN and hand size == 1: game ends (returns null)
+ * 
+ * Also updates turnOrder to include any new players who joined mid-game.
  */
-export function dealCardsForRound(gameState: RoomGameState): RoomGameState | null {
+export function dealCardsForRound(
+  gameState: RoomGameState,
+  currentMembers?: Array<{ id: string; avatar?: string }>
+): RoomGameState | null {
   let newHandSize = gameState.handSize;
   let newDirection = gameState.roundDirection;
+
+  // Update turnOrder to include any new players who joined mid-game
+  let updatedTurnOrder = gameState.turnOrder;
+  if (currentMembers) {
+    const currentMemberIds = new Set(currentMembers.map((m) => m.id));
+    const newPlayers = currentMembers.filter((m) => !gameState.turnOrder.includes(m.id));
+
+    if (newPlayers.length > 0) {
+      // Keep existing players in their current order, append new players
+      updatedTurnOrder = [
+        ...gameState.turnOrder.filter((id) => currentMemberIds.has(id)),
+        ...newPlayers.map((p) => p.id),
+      ];
+    }
+  }
 
   if (gameState.roundDirection === 'up') {
     if (gameState.handSize < gameState.maxHandSize) {
@@ -293,7 +313,7 @@ export function dealCardsForRound(gameState: RoomGameState): RoomGameState | nul
   }
 
   // Deal cards from the draw pile
-  const cardsNeeded = gameState.turnOrder.length * newHandSize;
+  const cardsNeeded = updatedTurnOrder.length * newHandSize;
   if (gameState.drawPile.length < cardsNeeded) {
     console.warn(
       `Not enough cards in draw pile to deal. Available: ${gameState.drawPile.length}, needed: ${cardsNeeded}`
@@ -304,12 +324,20 @@ export function dealCardsForRound(gameState: RoomGameState): RoomGameState | nul
     playerHands: newPlayerHands,
     drawPile: newDrawPile,
     trumpCard: newTrumpCard,
-  } = dealCardsFromPile(gameState.drawPile, gameState.turnOrder, newHandSize);
+  } = dealCardsFromPile(gameState.drawPile, updatedTurnOrder, newHandSize);
 
-  // Reset bets for new round
+  // Reset bets for new round and initialize new players
   const newPlayerBets: Record<string, number | null> = {};
-  for (const playerId of gameState.turnOrder) {
+  for (const playerId of updatedTurnOrder) {
     newPlayerBets[playerId] = null;
+  }
+
+  // Initialize scores for new players
+  const newScores = { ...gameState.scores };
+  for (const playerId of updatedTurnOrder) {
+    if (!(playerId in newScores)) {
+      newScores[playerId] = 0;
+    }
   }
 
   return {
@@ -323,7 +351,9 @@ export function dealCardsForRound(gameState: RoomGameState): RoomGameState | nul
     playerHands: newPlayerHands,
     playedCards: [], // Clear played cards for new round
     currentTrick: [], // Clear current trick
-    activePlayerId: gameState.turnOrder[0], // Reset to first player
+    turnOrder: updatedTurnOrder, // Update turnOrder to include new players
+    activePlayerId: updatedTurnOrder.length > 0 ? updatedTurnOrder[0] : null, // Reset to first player
+    scores: newScores,
     playerBets: newPlayerBets,
     lastUpdated: Date.now(),
   };

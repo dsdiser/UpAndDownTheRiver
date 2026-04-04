@@ -55,15 +55,10 @@ export class RoomDO implements DurableObjectClass {
       console.debug('RoomDO: websocket rehydration failed', e);
     }
 
-    // delete all game state from storage that don't have any active connections delete all if there are no connections at all
-    if (this.connections.size === 0) {
-      this.state.storage.deleteAll();
-      return;
-    }
-    let keysToDelete: string[] = [];
     this.state.storage
       .list({ allowConcurrency: true })
       .then((stored) => {
+        let keysToDelete: string[] = [];
         for (const key of stored.keys()) {
           if (!key.startsWith(GAME_STATE_KEY_PREFIX)) continue;
           const roomId = key.split(':')[1];
@@ -71,12 +66,17 @@ export class RoomDO implements DurableObjectClass {
             keysToDelete.push(key);
           }
         }
+        return Promise.resolve(keysToDelete);
       })
-      .then(() => {
-        this.state.storage.delete(keysToDelete);
+      .then((keysToDelete) => {
+        if (keysToDelete.length > 0) {
+          return this.state.storage.delete(keysToDelete);
+        }
+        return Promise.resolve(0);
+      })
+      .then((modifiedCount) => {
         console.debug(
-          'RoomDO: deleted game state for rooms with no active connections',
-          keysToDelete
+          `RoomDO: deleted game state for ${modifiedCount} rooms with no active connections`
         );
       });
   }
@@ -207,7 +207,8 @@ export class RoomDO implements DurableObjectClass {
 
     // Check if round is complete (all hands are empty)
     if (isRoundComplete(gameState)) {
-      const nextRoundState = dealCardsForRound(gameState);
+      const currentMembers = this.listMembers(roomId);
+      const nextRoundState = dealCardsForRound(gameState, currentMembers);
 
       if (nextRoundState === null) {
         // Game has ended (going down the river and hand size was 1)

@@ -4,12 +4,17 @@ import styles from './PlayerSeats.module.css';
 import { userAtom } from '../../state/userAtoms';
 import type { RemoteMember } from '../../state/userAtoms';
 import { Avatar } from '../avatar/Avatar';
+import { GameState } from '../../types/gameState';
 
 interface PlayerSeatsProps {
   roomMembers: RemoteMember[];
   playerHandSizes: Record<string, number>;
   playerBets: Record<string, number | null>;
   scores: Record<string, number>;
+  gameState?: GameState;
+  currentUserBet?: number | null;
+  onBetChange?: (bet: number) => void;
+  onBetSubmit?: () => void;
 }
 
 // Maps number of players to which seat indices to display
@@ -64,9 +69,15 @@ const PlayerSeats: React.FC<PlayerSeatsProps> = ({
   playerHandSizes,
   playerBets,
   scores,
+  gameState,
+  currentUserBet,
+  onBetChange,
+  onBetSubmit,
 }) => {
   const currentUser = useAtomValue(userAtom);
   const currentUserId = currentUser?.id;
+
+  const isBettingPhase = gameState === GameState.Betting;
 
   // Determine active seats and player-to-seat mapping
   const allPlayers = useMemo(() => {
@@ -100,15 +111,18 @@ const PlayerSeats: React.FC<PlayerSeatsProps> = ({
 
     const isLocalPlayer = playerId === currentUserId;
     const member = memberMap.get(playerId);
-    const handSize = playerHandSizes[playerId] ?? 0;
+    const seatHandSize = playerHandSizes[playerId] ?? 0;
     const bet = playerBets[playerId];
     const score = scores[playerId] ?? 0;
     const isWaitingPlayer = !(playerId in playerHandSizes);
+    const showBettingInput = isBettingPhase && isLocalPlayer && seatHandSize > 0;
 
     return (
       <div
         key={`seat-${seatNumber}`}
-        className={`${styles.seat} ${isWaitingPlayer ? styles.waiting : ''}`}
+        className={`${styles.seat} ${isWaitingPlayer ? styles.waiting : ''} ${
+          showBettingInput ? styles.bettingSeat : ''
+        }`}
         data-seat={seatNumber}
       >
         <div className={styles.avatarContainer}>
@@ -118,15 +132,37 @@ const PlayerSeats: React.FC<PlayerSeatsProps> = ({
         <div className={styles.playerInfo}>
           <div className={styles.playerName}>{isLocalPlayer ? 'You' : `Player ${seatNumber}`}</div>
 
-          <div className={styles.stats}>
-            {handSize > 0 && (
-              <span className={styles.stat}>
-                {handSize} card{handSize !== 1 ? 's' : ''}
-              </span>
-            )}
-            <span className={styles.stat}>Score: {score}</span>
-            {bet !== null && bet !== undefined && <span className={styles.stat}>Bet: {bet}</span>}
-          </div>
+          {showBettingInput ? (
+            <div className={styles.bettingInput}>
+              <div className={styles.bettingPrompt}>How many hands?</div>
+              <input
+                type="number"
+                className={styles.betNumberInput}
+                min="0"
+                max={seatHandSize}
+                value={currentUserBet ?? ''}
+                onChange={(e) => onBetChange?.(parseInt(e.target.value) || 0)}
+                placeholder="0"
+              />
+              <button
+                className={styles.submitBetButton}
+                onClick={onBetSubmit}
+                disabled={currentUserBet === null || currentUserBet === undefined}
+              >
+                Submit
+              </button>
+            </div>
+          ) : (
+            <div className={styles.stats}>
+              {seatHandSize > 0 && (
+                <span className={styles.stat}>
+                  {seatHandSize} card{seatHandSize !== 1 ? 's' : ''}
+                </span>
+              )}
+              <span className={styles.stat}>Score: {score}</span>
+              {bet !== null && bet !== undefined && <span className={styles.stat}>Bet: {bet}</span>}
+            </div>
+          )}
         </div>
 
         {isWaitingPlayer && <div className={styles.waitingBadge}>Waiting</div>}
