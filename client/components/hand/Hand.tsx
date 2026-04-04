@@ -47,6 +47,7 @@ export const Hand: React.FC = () => {
 
   const [sortKey, setSortKey] = useState<SortKey>('rank');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
 
   const isPlayerActive = user?.id === activePlayerId;
 
@@ -146,7 +147,7 @@ export const Hand: React.FC = () => {
       // Otherwise, any card is valid
       return { card, canPlay: true };
     },
-    [isPlayerActive, currentTrick, getLedSuit, playerHand, trumpCard]
+    [isPlayerActive, currentTrick, getLedSuit, playerHand, trumpCard, gameState]
   );
 
   /**
@@ -212,6 +213,48 @@ export const Hand: React.FC = () => {
     return card?.imagePath ?? '/images/cards/card_empty.png';
   };
 
+  /**
+   * Calculate fan effect for a card based on hovered card index
+   * Cards rotate and shift to create an arc/fan pattern around the hovered card
+   */
+  const getFanEffect = useCallback(
+    (cardIndex: number): { x: number; y: number; rotate: number } => {
+      if (hoveredCardIndex === null || hoveredCardIndex === cardIndex) {
+        return { x: 0, y: 0, rotate: 0 };
+      }
+
+      const distance = cardIndex - hoveredCardIndex;
+      const maxDistance = 4; // Effect applies to up to 4 cards away
+      const maxRotation = 20; // Maximum rotation in degrees
+      const maxOffset = 40; // Maximum horizontal shift
+
+      // Only apply effect to nearby cards
+      if (Math.abs(distance) > maxDistance) {
+        return { x: 0, y: 0, rotate: 0 };
+      }
+
+      // Calculate effect strength based on distance
+      const normalizedDistance = Math.abs(distance) / maxDistance;
+      const effectStrength = 1 - normalizedDistance * 0.2; // Fade effect for farther cards
+
+      // Direction: left cards rotate/shift left, right cards rotate/shift right
+      const direction = distance < 0 ? -1 : 1;
+
+      // Rotation increases with distance from hovered card
+      const rotation = direction * maxRotation * effectStrength;
+
+      // Horizontal offset creates the fan spread
+      const offset = maxOffset * effectStrength;
+
+      return {
+        x: direction * offset,
+        y: 0,
+        rotate: rotation,
+      };
+    },
+    [hoveredCardIndex]
+  );
+
   if (!user) {
     return <div className={styles.hand}></div>;
   }
@@ -253,7 +296,7 @@ export const Hand: React.FC = () => {
       </div>
 
       <div className={styles.hand}>
-        {cardStatuses.map(({ card, canPlay, reason }) => (
+        {cardStatuses.map(({ card, canPlay, reason }, index) => (
           <Card
             key={card}
             cardFace={card}
@@ -261,6 +304,9 @@ export const Hand: React.FC = () => {
             canPlay={canPlay}
             disabledReason={reason}
             onPlay={playCard}
+            fanEffect={getFanEffect(index)}
+            onMouseEnter={() => setHoveredCardIndex(index)}
+            onMouseLeave={() => setHoveredCardIndex(null)}
           />
         ))}
       </div>

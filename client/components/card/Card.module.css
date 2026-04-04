@@ -13,9 +13,16 @@
   transition:
     transform 0.2s ease,
     filter 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
   user-select: none;
   -webkit-user-drag: none;
+
+  /* Black border around all cards */
+  border: 2px solid #000;
+
+  /* Transform origin for fan effect - pivot from bottom center */
+  transform-origin: center bottom;
 
   /* Add subtle shadow */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -24,6 +31,7 @@
 .cardContainer:hover:not(.disabled) {
   transform: translateY(-8px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  border-color: #ffd700;
 }
 
 .cardContainer:active:not(.disabled) {
@@ -66,24 +74,6 @@
   object-fit: cover;
   display: block;
   background-color: #f5f5f5;
-}
-
-/* Tooltip for disabled reason */
-.tooltip {
-  position: absolute;
-  bottom: -40px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 1000;
-  opacity: 0;
-  animation: slideUpFade 0.2s ease forwards;
 }
 
 @keyframes slideUpFade {

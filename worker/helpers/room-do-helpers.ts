@@ -41,7 +41,7 @@ export type RoomGameState = {
   lastUpdated: number;
 };
 
-const GAME_STATE_KEY_PREFIX = 'gameState:';
+export const GAME_STATE_KEY_PREFIX = 'gameState:';
 
 export function gameStateKey(roomId: string) {
   return `${GAME_STATE_KEY_PREFIX}${roomId}`;

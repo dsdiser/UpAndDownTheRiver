@@ -6,13 +6,10 @@ import {
   currentUserBetAtom,
   handSizeAtom,
   trumpCardAtom,
-  playerHandAtom,
 } from '../../state/gameAtoms';
 import { roomMembersAtom, userAtom } from '../../state/userAtoms';
 import { WebsocketContext } from '../../context/WebsocketContext';
 import { MessageType } from '../../../types/messages';
-import Card from '../card/Card';
-import type { CardFace } from '../../types/cards';
 
 export const BettingScreen: React.FC = () => {
   const user = useAtomValue(userAtom);
@@ -21,7 +18,6 @@ export const BettingScreen: React.FC = () => {
   const currentUserBet = useAtomValue(currentUserBetAtom);
   const handSize = useAtomValue(handSizeAtom);
   const trumpCard = useAtomValue(trumpCardAtom);
-  const playerHand = useAtomValue(playerHandAtom);
   const setCurrentUserBet = useSetAtom(currentUserBetAtom);
   const send = useContext(WebsocketContext);
 
@@ -58,22 +54,6 @@ export const BettingScreen: React.FC = () => {
             <p className={styles.trumpValue}>{trumpCard}</p>
           </div>
         )}
-
-        <div className={styles.handDisplay}>
-          <h3 className={styles.handTitle}>Your Hand:</h3>
-          <div className={styles.cardGrid}>
-            {playerHand.map((cardFace) => (
-              <Card
-                key={cardFace}
-                cardFace={cardFace as CardFace}
-                imagePath={`/images/cards/card_${cardFace}.png`}
-                canPlay={false}
-                disabledReason="Select your bet first"
-                onPlay={() => {}}
-              />
-            ))}
-          </div>
-        </div>
 
         <div className={styles.betSection}>
           <p className={styles.handSizeInfo}>Hand Size: {handSize} cards</p>

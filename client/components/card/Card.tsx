@@ -14,6 +14,12 @@ interface CardProps {
   disabledReason?: string;
   /** Callback when card is played */
   onPlay: (cardFace: CardFace) => void;
+  /** Fan effect (x, y offset and rotation in degrees) */
+  fanEffect?: { x: number; y: number; rotate: number };
+  /** Mouse enter handler for fan effect coordination */
+  onMouseEnter?: () => void;
+  /** Mouse leave handler for fan effect coordination */
+  onMouseLeave?: () => void;
 }
 
 /**
@@ -33,6 +39,9 @@ export const Card: React.FC<CardProps> = ({
   canPlay,
   disabledReason,
   onPlay,
+  fanEffect = { x: 0, y: 0, rotate: 0 },
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   const [isSelected, setIsSelected] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
@@ -84,8 +93,15 @@ export const Card: React.FC<CardProps> = ({
     <motion.div
       className={`${styles.cardContainer} ${!canPlay ? styles.disabled : ''} ${isSelected ? styles.selected : ''}`}
       onClick={handleClick}
-      animate={isAnimatingOut ? { opacity: 0, y: -20 } : { opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      animate={{
+        opacity: isAnimatingOut ? 0 : 1,
+        x: isAnimatingOut ? 0 : fanEffect.x,
+        y: isAnimatingOut ? -20 : fanEffect.y,
+        rotate: isAnimatingOut ? 0 : fanEffect.rotate,
+      }}
+      transition={{ duration: 0.05 }}
       onAnimationComplete={() => {
         if (isAnimatingOut) {
           setIsAnimatingOut(false);
@@ -104,9 +120,6 @@ export const Card: React.FC<CardProps> = ({
       <div className={styles.cardImageWrapper}>
         <img src={imagePath} alt={cardFace} className={styles.cardImage} draggable={false} />
       </div>
-
-      {/* Tooltip for disabled reason */}
-      {!canPlay && disabledReason && <div className={styles.tooltip}>{disabledReason}</div>}
     </motion.div>
   );
 };

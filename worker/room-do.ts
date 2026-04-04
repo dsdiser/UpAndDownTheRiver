@@ -22,6 +22,7 @@ import {
   isString,
   isRoundComplete,
   dealCardsForRound,
+  GAME_STATE_KEY_PREFIX,
 } from './helpers/room-do-helpers';
 import { GameState } from '../client/types/gameState';
 
@@ -64,7 +65,7 @@ export class RoomDO implements DurableObjectClass {
       .list({ allowConcurrency: true })
       .then((stored) => {
         for (const key of stored.keys()) {
-          if (!key.startsWith('gameState:')) continue;
+          if (!key.startsWith(GAME_STATE_KEY_PREFIX)) continue;
           const roomId = key.split(':')[1];
           if (!this.connections.has(roomId)) {
             keysToDelete.push(key);

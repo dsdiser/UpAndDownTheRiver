@@ -118,8 +118,7 @@ export type IncomingMessage =
   | CardPlayedMessage
   | TurnUpdateMessage
   | GameEndMessage
-  | PresenceMessage
-  | ({ type: string } & Record<string, unknown>);
+  | PresenceMessage;
 
 export type OutgoingMessage = IncomingMessage | ({ type: string } & Record<string, unknown>);
 

@@ -1,13 +1,16 @@
 .handContainer {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  max-width: 100%;
-  padding: 16px;
+  gap: 12px;
+  padding: 12px 16px;
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  min-height: 200px;
+  max-width: 90vw;
+  z-index: 50;
 }
 
 .handHeader {
@@ -68,66 +71,49 @@
 
 .hand {
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  min-height: 100px;
-  overflow-y: auto;
-  padding: 8px 0;
+  gap: 0;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+  max-width: 100%;
+  perspective: 1000px;
+}
+
+/* Negative margin for card overlap */
+.hand > * + * {
+  margin-left: -30px;
 }
 
 .emptyHand {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100px;
+  height: 60px;
   color: #999;
-  font-size: 16px;
+  font-size: 14px;
   font-style: italic;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .handContainer {
-    padding: 12px;
-    gap: 12px;
+    bottom: 15px;
+    padding: 10px 12px;
+    gap: 10px;
   }
 
   .handHeader {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
-  }
-
-  .title {
-    font-size: 16px;
-  }
-
-  .sortControls {
-    width: 100%;
     gap: 8px;
-  }
-
-  .sortButton {
-    flex: 1;
-    justify-content: center;
-    padding: 8px 10px;
-    font-size: 13px;
-  }
-
-  .hand {
-    gap: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .handContainer {
-    padding: 10px;
-    gap: 10px;
   }
 
   .title {
     font-size: 14px;
+    margin-bottom: -4px;
   }
 
   .sortControls {
@@ -137,17 +123,45 @@
 
   .sortButton {
     flex: 1;
-    padding: 7px 8px;
+    justify-content: center;
+    padding: 6px 8px;
     font-size: 12px;
   }
 
-  .direction {
+  .hand > * + * {
+    margin-left: -25px;
+  }
+}
+
+@media (max-width: 480px) {
+  .handContainer {
+    bottom: 10px;
+    padding: 8px 10px;
+    gap: 8px;
+    max-width: 95vw;
+  }
+
+  .title {
+    font-size: 12px;
+  }
+
+  .sortControls {
+    width: 100%;
+    gap: 4px;
+  }
+
+  .sortButton {
+    flex: 1;
+    padding: 5px 6px;
     font-size: 11px;
   }
 
-  .hand {
-    gap: 8px;
-    min-height: 80px;
+  .direction {
+    font-size: 10px;
+  }
+
+  .hand > * + * {
+    margin-left: -20px;
   }
 
   .emptyHand {

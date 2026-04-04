@@ -22,10 +22,6 @@ const Game: React.FC = () => {
     [roomMembers, playerHandSizes]
   );
 
-  if (gameState === GameState.Betting) {
-    return <BettingScreen />;
-  }
-
   return (
     <div className={styles.gameScreen}>
       <PlayerSeats
@@ -36,6 +32,7 @@ const Game: React.FC = () => {
       />
       <Hand />
       {waitingPlayers.length > 0 && <WaitingPlayers players={waitingPlayers} />}
+      {gameState === GameState.Betting && <BettingScreen />}
     </div>
   );
 };
