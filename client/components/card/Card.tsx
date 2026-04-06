@@ -101,7 +101,7 @@ export const Card: React.FC<CardProps> = ({
         y: isAnimatingOut ? -20 : fanEffect.y,
         rotate: isAnimatingOut ? 0 : fanEffect.rotate,
       }}
-      transition={{ duration: 0.05 }}
+      transition={{ duration: 0.05, ease: 'easeInOut', delay: isAnimatingOut ? 0 : 0.05 }}
       onAnimationComplete={() => {
         if (isAnimatingOut) {
           setIsAnimatingOut(false);
@@ -117,9 +117,7 @@ export const Card: React.FC<CardProps> = ({
         }
       }}
     >
-      <div className={styles.cardImageWrapper}>
-        <img src={imagePath} alt={cardFace} className={styles.cardImage} draggable={false} />
-      </div>
+      <img src={imagePath} alt={cardFace} className={styles.cardImage} draggable={false} />
     </motion.div>
   );
 };

@@ -195,7 +195,7 @@ export const Hand: React.FC = () => {
       const distance = cardIndex - hoveredCardIndex;
       const maxDistance = 4; // Effect applies to up to 4 cards away
       const maxRotation = 20; // Maximum rotation in degrees
-      const maxOffset = 40; // Maximum horizontal shift
+      const maxOffset = 20; // Maximum horizontal shift
 
       // Only apply effect to nearby cards
       if (Math.abs(distance) > maxDistance) {
