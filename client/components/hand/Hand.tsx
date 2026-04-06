@@ -16,8 +16,6 @@ import { MessageType } from '../../../types/messages';
 import { gameStateAtom } from '../../state/gameStateAtom';
 import { GameState } from '../../types/gameState';
 
-type SortKey = 'rank' | 'suit';
-type SortDirection = 'asc' | 'desc';
 const ranks = ['02', '03', '04', '05', '06', '07', '08', '09', '10', 'J', 'Q', 'K', 'A'];
 const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
 
@@ -28,10 +26,10 @@ interface CardPlayableStatus {
 }
 
 /**
- * Hand component - displays current player's hand with sorting and validation.
+ * Hand component - displays current player's hand with suit and rank-based sorting.
  *
  * Features:
- * - Sort by rank or suit (ascending/descending)
+ * - Sorted by suit (clubs → diamonds → hearts → spades), then by rank (high to low)
  * - Validate playable cards based on suit-following rules
  * - Disable cards when it's not the player's turn
  * - Show disable reasons in tooltips
@@ -45,11 +43,9 @@ export const Hand: React.FC = () => {
   const send = useContext(WebsocketContext);
   const gameState = useAtomValue(gameStateAtom);
 
-  const [sortKey, setSortKey] = useState<SortKey>('rank');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
 
-  const isPlayerActive = user?.id === activePlayerId;
+  const isMyTurn = user?.id === activePlayerId;
 
   /**
    * Helper to extract played card info
@@ -100,7 +96,7 @@ export const Hand: React.FC = () => {
           reason: 'Cannot play cards during betting phase',
         };
       }
-      if (!isPlayerActive) {
+      if (!isMyTurn) {
         return {
           card,
           canPlay: false,
@@ -147,39 +143,29 @@ export const Hand: React.FC = () => {
       // Otherwise, any card is valid
       return { card, canPlay: true };
     },
-    [isPlayerActive, currentTrick, getLedSuit, playerHand, trumpCard, gameState]
+    [isMyTurn, currentTrick, getLedSuit, playerHand, trumpCard, gameState]
   );
 
   /**
-   * Get sorted and playable hand
+   * Get sorted and playable hand (sorted by suit, then by rank descending)
    */
   const sortedHand = useMemo(() => {
     let sorted = (playerHand as CardFace[]).slice();
 
-    // Sort based on selected key
-    if (sortKey === 'rank') {
-      sorted.sort((a: CardFace, b: CardFace) => {
-        const aRank = getRankOrder(a);
-        const bRank = getRankOrder(b);
-        return sortDirection === 'asc' ? aRank - bRank : bRank - aRank;
-      });
-    } else {
-      // Sort by suit
-      sorted.sort((a: CardFace, b: CardFace) => {
-        const aSuit = getSuitOrder(a);
-        const bSuit = getSuitOrder(b);
+    // Sort by suit first (ascending: clubs → diamonds → hearts → spades)
+    sorted.sort((a: CardFace, b: CardFace) => {
+      const aSuit = getSuitOrder(a);
+      const bSuit = getSuitOrder(b);
 
-        // If same suit, sort by rank secondarily
-        const suitDiff = sortDirection === 'asc' ? aSuit - bSuit : bSuit - aSuit;
-        if (suitDiff !== 0) return suitDiff;
+      const suitDiff = aSuit - bSuit;
+      if (suitDiff !== 0) return suitDiff;
 
-        // Secondary sort by rank (always ascending for consistency)
-        return getRankOrder(a) - getRankOrder(b);
-      });
-    }
+      // Secondary sort by rank descending (high to low)
+      return getRankOrder(b) - getRankOrder(a);
+    });
 
     return sorted;
-  }, [playerHand, sortKey, sortDirection]);
+  }, [playerHand]);
 
   /**
    * Get playable status for each card
@@ -187,23 +173,6 @@ export const Hand: React.FC = () => {
   const cardStatuses = useMemo(() => {
     return sortedHand.map((card) => getPlayableStatusForCard(card));
   }, [sortedHand, getPlayableStatusForCard]);
-
-  /**
-   * Toggle sort key between rank and suit
-   */
-  const toggleSortKey = useCallback(
-    (key: SortKey) => {
-      if (sortKey === key) {
-        // Toggle direction if same key
-        setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-      } else {
-        // Switch to new key, default to ascending
-        setSortKey(key);
-        setSortDirection('asc');
-      }
-    },
-    [sortKey]
-  );
 
   /**
    * Get card image path
@@ -255,63 +224,21 @@ export const Hand: React.FC = () => {
     [hoveredCardIndex]
   );
 
-  if (!user) {
-    return <div className={styles.hand}></div>;
-  }
-
   return (
     <div className={styles.handContainer}>
-      <div className={styles.handHeader}>
-        <h3 className={styles.title}>Your Hand</h3>
-        <div className={styles.sortControls}>
-          <button
-            className={`${styles.sortButton} ${sortKey === 'rank' ? styles.active : ''}`}
-            onClick={() => toggleSortKey('rank')}
-            title={
-              sortKey === 'rank'
-                ? `Sort by rank ${sortDirection === 'asc' ? '(low to high)' : '(high to low)'}`
-                : 'Sort by rank (low to high)'
-            }
-          >
-            Rank{' '}
-            {sortKey === 'rank' && (
-              <span className={styles.direction}>{sortDirection === 'asc' ? '↑' : '↓'}</span>
-            )}
-          </button>
-          <button
-            className={`${styles.sortButton} ${sortKey === 'suit' ? styles.active : ''}`}
-            onClick={() => toggleSortKey('suit')}
-            title={
-              sortKey === 'suit'
-                ? `Sort by suit ${sortDirection === 'asc' ? '(clubs → spades)' : '(spades → clubs)'}`
-                : 'Sort by suit (clubs → spades)'
-            }
-          >
-            Suit{' '}
-            {sortKey === 'suit' && (
-              <span className={styles.direction}>{sortDirection === 'asc' ? '→' : '←'}</span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      <div className={styles.hand}>
-        {cardStatuses.map(({ card, canPlay, reason }, index) => (
-          <Card
-            key={card}
-            cardFace={card}
-            imagePath={getCardImagePath(card)}
-            canPlay={canPlay}
-            disabledReason={reason}
-            onPlay={playCard}
-            fanEffect={getFanEffect(index)}
-            onMouseEnter={() => setHoveredCardIndex(index)}
-            onMouseLeave={() => setHoveredCardIndex(null)}
-          />
-        ))}
-      </div>
-
-      {playerHand.length === 0 && <div className={styles.emptyHand}>No cards in hand</div>}
+      {cardStatuses.map(({ card, canPlay, reason }, index) => (
+        <Card
+          key={card}
+          cardFace={card}
+          imagePath={getCardImagePath(card)}
+          canPlay={canPlay}
+          disabledReason={reason}
+          onPlay={playCard}
+          fanEffect={getFanEffect(index)}
+          onMouseEnter={() => setHoveredCardIndex(index)}
+          onMouseLeave={() => setHoveredCardIndex(null)}
+        />
+      ))}
     </div>
   );
 };

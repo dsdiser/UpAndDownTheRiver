@@ -5,8 +5,8 @@
 
   /* Responsive card sizing - scales proportionally with viewport width */
   /* Base size: ~12% of viewport width, clamped between min/max */
-  width: clamp(60px, 12vw, 140px);
-  height: clamp(84px, 16.8vw, 196px);
+  width: clamp(60px, 12vw, 280px);
+  height: clamp(84px, 16.8vw, 392px);
 
   border-radius: 8px;
   overflow: hidden;
@@ -51,7 +51,7 @@
 .cardContainer.disabled {
   cursor: not-allowed;
   opacity: 0.5;
-  filter: grayscale(100%);
+  filter: brightness(50%);
 }
 
 .cardContainer.disabled:hover {
