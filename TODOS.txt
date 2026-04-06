@@ -1,19 +1,18 @@
 TODOS:
-- UI
--   User display w/ cards
--   Show a user's own hand, allow them to play a card
 - define max players in UI + backend
 - Allow setting the number of rounds in the prelobby + during the game. 
-- Scoreboard display
+- Scoreboard display - show how points are totaled
 - Basic Tutorial
 - Adjust # of rounds based on the number of players, ie if you have 8 people, you can only do 52/(8 player + 1 trump) = 5 rounds
 - Figuring out a method for handling players that drop mid game, allow other players to skip or just default to playing a card?
-- 
 
 Extras that probably won't get done:
 - Allow for different scoring systems
 
 Done:
+- UI
+-   User display w/ cards
+-   Show a user's own hand, allow them to play a card
 - Handle betting round
 - main menu w/ start button
 - basic state sync
