@@ -193,18 +193,11 @@ export const Hand: React.FC = () => {
       }
 
       const distance = cardIndex - hoveredCardIndex;
-      const maxDistance = 4; // Effect applies to up to 4 cards away
-      const maxRotation = 20; // Maximum rotation in degrees
-      const maxOffset = 20; // Maximum horizontal shift
-
-      // Only apply effect to nearby cards
-      if (Math.abs(distance) > maxDistance) {
-        return { x: 0, y: 0, rotate: 0 };
-      }
+      const maxRotation = 10; // Maximum rotation in degrees
+      const maxOffset = 10; // Maximum horizontal shift
 
       // Calculate effect strength based on distance
-      const normalizedDistance = Math.abs(distance) / maxDistance;
-      const effectStrength = 1 - normalizedDistance * 0.2; // Fade effect for farther cards
+      const effectStrength = Math.abs(distance) * 0.4; // increase effect for farther cards
 
       // Direction: left cards rotate/shift left, right cards rotate/shift right
       const direction = distance < 0 ? -1 : 1;
@@ -213,11 +206,11 @@ export const Hand: React.FC = () => {
       const rotation = direction * maxRotation * effectStrength;
 
       // Horizontal offset creates the fan spread
-      const offset = maxOffset * effectStrength;
+      const offset = maxOffset;
 
       return {
         x: direction * offset,
-        y: 0,
+        y: 40 * effectStrength, // Slight vertical lift for nearby cards
         rotate: rotation,
       };
     },

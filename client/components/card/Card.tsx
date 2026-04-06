@@ -98,10 +98,10 @@ export const Card: React.FC<CardProps> = ({
       animate={{
         opacity: isAnimatingOut ? 0 : 1,
         x: isAnimatingOut ? 0 : fanEffect.x,
-        y: isAnimatingOut ? -20 : fanEffect.y,
+        y: isAnimatingOut ? 0 : fanEffect.y,
         rotate: isAnimatingOut ? 0 : fanEffect.rotate,
       }}
-      transition={{ duration: 0.05, ease: 'easeInOut', delay: isAnimatingOut ? 0 : 0.05 }}
+      transition={{ duration: 0.04, ease: 'easeInOut' }}
       onAnimationComplete={() => {
         if (isAnimatingOut) {
           setIsAnimatingOut(false);
