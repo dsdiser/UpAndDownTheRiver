@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useContext } from 'react';
+import React, { useState, useMemo, useCallback, useContext, useEffect } from 'react';
 import { useAtomValue } from 'jotai';
 import styles from './Hand.module.css';
 import { Card } from '../card/Card';
@@ -15,6 +15,7 @@ import { WebsocketContext } from '../../context/WebsocketContext';
 import { MessageType } from '../../../types/messages';
 import { gameStateAtom } from '../../state/gameStateAtom';
 import { GameState } from '../../types/gameState';
+import useComponentVisible from '../../hooks/useComponentInteractive';
 
 const ranks = ['02', '03', '04', '05', '06', '07', '08', '09', '10', 'J', 'Q', 'K', 'A'];
 const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
@@ -35,6 +36,7 @@ interface CardPlayableStatus {
  * - Show disable reasons in tooltips
  */
 export const Hand: React.FC = () => {
+  const { ref, isComponentVisible } = useComponentVisible(true);
   const user = useAtomValue(userAtom);
   const playerHand = useAtomValue(playerHandAtom);
   const activePlayerId = useAtomValue(activePlayerIdAtom);
@@ -44,8 +46,16 @@ export const Hand: React.FC = () => {
   const gameState = useAtomValue(gameStateAtom);
 
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
+  const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
 
   const isMyTurn = user?.id === activePlayerId;
+
+  // Clear selection when clicking outside the hand
+  useEffect(() => {
+    if (!isComponentVisible) {
+      setSelectedCardIndex(null);
+    }
+  }, [isComponentVisible]);
 
   /**
    * Helper to extract played card info
@@ -67,6 +77,17 @@ export const Hand: React.FC = () => {
     },
     [send]
   );
+
+  const handleCardSelectionChange = useCallback((index: number, isSelected: boolean) => {
+    // otherwise handle selection change
+    if (isSelected) {
+      // Deselect previously selected card (if any) and select new one
+      setSelectedCardIndex(index);
+    } else {
+      // Deselect if it's the currently selected card
+      setSelectedCardIndex((prev) => (prev === index ? null : prev));
+    }
+  }, []);
 
   /**
    * Get the rank sorting order
@@ -188,7 +209,9 @@ export const Hand: React.FC = () => {
    */
   const getFanEffect = useCallback(
     (cardIndex: number): { x: number; y: number; rotate: number } => {
-      if (hoveredCardIndex === null || hoveredCardIndex === cardIndex) {
+      if (hoveredCardIndex === cardIndex) {
+        return { x: 0, y: -20, rotate: 0 };
+      } else if (hoveredCardIndex === null) {
         return { x: 0, y: 0, rotate: 0 };
       }
 
@@ -218,7 +241,18 @@ export const Hand: React.FC = () => {
   );
 
   return (
-    <div className={styles.handContainer}>
+    <div
+      ref={ref}
+      className={styles.handContainer}
+      style={
+        {
+          '--card-margin': `${Math.min(-20, -40 + (cardStatuses.length - 8) * 2)}px`,
+          '--card-margin-tablet': `${Math.min(-18, -35 + (cardStatuses.length - 8) * 2)}px`,
+          '--card-margin-mobile': `${Math.min(-12, -30 + (cardStatuses.length - 8) * 2)}px`,
+          '--card-margin-small-height': `${Math.min(-10, -28 + (cardStatuses.length - 8) * 2)}px`,
+        } as any
+      }
+    >
       {cardStatuses.map(({ card, canPlay, reason }, index) => (
         <Card
           key={card}
@@ -230,6 +264,11 @@ export const Hand: React.FC = () => {
           fanEffect={getFanEffect(index)}
           onMouseEnter={() => setHoveredCardIndex(index)}
           onMouseLeave={() => setHoveredCardIndex(null)}
+          isSelected={selectedCardIndex === index}
+          onSelectionChange={(isSelected) => handleCardSelectionChange(index, isSelected)}
+          style={{
+            zIndex: selectedCardIndex === index ? 20 : index === hoveredCardIndex ? 10 : index,
+          }}
         />
       ))}
     </div>

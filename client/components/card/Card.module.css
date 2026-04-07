@@ -3,10 +3,10 @@
   cursor: pointer;
   flex-shrink: 0;
 
-  /* Responsive card sizing - scales proportionally with viewport width */
-  /* Base size: ~12% of viewport width, clamped between min/max */
-  width: clamp(60px, 12vw, 280px);
-  height: clamp(84px, 16.8vw, 392px);
+  /* Responsive card sizing - scales proportionally with viewport dimensions */
+  /* Uses both vw and vh to adapt to different aspect ratios */
+  width: clamp(70px, max(12vw, 14vh), 280px);
+  height: clamp(98px, max(16.8vw, 19.6vh), 392px);
 
   border-radius: 8px;
   overflow: hidden;
@@ -30,6 +30,7 @@
 
 .cardContainer:hover:not(.disabled) {
   transform: translateY(-8px);
+  z-index: 5;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   border-color: #ffd700;
 }
@@ -42,6 +43,7 @@
 /* Selected state for mobile - visual highlight when first tapped */
 .cardContainer.selected {
   transform: translateY(-8px);
+  z-index: 20;
   box-shadow:
     0 0 0 3px rgba(100, 200, 255, 0.5),
     0 4px 16px rgba(0, 0, 0, 0.25);
@@ -68,12 +70,13 @@
 /* Responsive adjustments for smaller screens */
 @media (max-width: 768px) {
   .cardContainer {
-    width: clamp(50px, 11vw, 120px);
-    height: clamp(70px, 15.4vw, 168px);
+    width: clamp(60px, max(11vw, 13vh), 140px);
+    height: clamp(84px, max(15.4vw, 18.2vh), 196px);
   }
 
   .cardContainer:hover:not(.disabled) {
     transform: translateY(-6px);
+    z-index: 5;
   }
 
   .cardContainer.selected {
@@ -87,12 +90,13 @@
 
 @media (max-width: 480px) {
   .cardContainer {
-    width: clamp(45px, 10vw, 100px);
-    height: clamp(63px, 14vw, 140px);
+    width: clamp(55px, max(10vw, 12vh), 110px);
+    height: clamp(77px, max(14vw, 16.8vh), 154px);
   }
 
   .cardContainer:hover:not(.disabled) {
     transform: translateY(-4px);
+    z-index: 5;
   }
 
   .cardContainer.selected {
@@ -101,5 +105,26 @@
 
   .cardContainer:active:not(.disabled) {
     transform: translateY(-2px);
+  }
+}
+
+/* Very small screens or landscape orientation with limited height */
+@media (max-height: 600px) {
+  .cardContainer {
+    width: clamp(50px, max(10vw, 12vh), 130px);
+    height: clamp(70px, max(14vw, 16.8vh), 182px);
+  }
+
+  .cardContainer:hover:not(.disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  .cardContainer.selected {
+    transform: translateY(-3px);
+  }
+
+  .cardContainer:active:not(.disabled) {
+    transform: translateY(-1px);
   }
 }

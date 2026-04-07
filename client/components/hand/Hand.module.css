@@ -5,10 +5,41 @@
   transform: translateX(-50%);
   display: flex;
   flex-direction: row;
-  max-width: 90vw;
   z-index: 50;
 }
 
 .handContainer > * + * {
-  margin-left: -40px;
+  margin-left: var(--card-margin, -40px);
+}
+
+/* Progressive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .handContainer {
+    bottom: -15px;
+  }
+
+  .handContainer > * + * {
+    margin-left: var(--card-margin-tablet, -35px);
+  }
+}
+
+@media (max-width: 480px) {
+  .handContainer {
+    bottom: -8px;
+  }
+
+  .handContainer > * + * {
+    margin-left: var(--card-margin-mobile, -30px);
+  }
+}
+
+/* Very small screens or landscape with limited height */
+@media (max-height: 600px) {
+  .handContainer {
+    bottom: -5px;
+  }
+
+  .handContainer > * + * {
+    margin-left: var(--card-margin-small-height, -28px);
+  }
 }

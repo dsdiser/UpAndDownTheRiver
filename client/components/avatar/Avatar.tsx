@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
-import { motion, Transition, useAnimation } from 'motion/react';
+import { motion, useAnimation } from 'motion/react';
 import styles from './Avatar.module.css';
-import { useAtomValue } from 'jotai';
-import { flipAnimationDuration, activeFlipperUserIdAtom } from '../../state/coinAtoms';
 
 interface AvatarProps {
   guildId?: string; // Discord Guild ID to fetch guild-specific avatarS
@@ -11,12 +9,6 @@ interface AvatarProps {
   userId: string; // User's Discord or randomized ID
   isSpeaking?: boolean; // Whether the user is currently speaking
 }
-
-const transition: Transition = {
-  type: 'spring',
-  duration: flipAnimationDuration,
-  bounce: 0.95,
-};
 
 /**
  * Avatar component to display user's avatar image.

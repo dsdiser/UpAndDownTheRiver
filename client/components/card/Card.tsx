@@ -20,6 +20,12 @@ interface CardProps {
   onMouseEnter?: () => void;
   /** Mouse leave handler for fan effect coordination */
   onMouseLeave?: () => void;
+  /** Whether this card is currently selected (mobile) - controlled by parent */
+  isSelected?: boolean;
+  /** Callback when selection state changes on mobile */
+  onSelectionChange?: (isSelected: boolean) => void;
+  /** Additional inline styles */
+  style?: React.CSSProperties;
 }
 
 /**
@@ -42,8 +48,10 @@ export const Card: React.FC<CardProps> = ({
   fanEffect = { x: 0, y: 0, rotate: 0 },
   onMouseEnter,
   onMouseLeave,
+  isSelected = false,
+  onSelectionChange,
+  style,
 }) => {
-  const [isSelected, setIsSelected] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
@@ -62,32 +70,26 @@ export const Card: React.FC<CardProps> = ({
   const handleClick = useCallback(() => {
     // During betting phase, cards cannot be played
     // If card can't be played, don't do anything
-    if (!canPlay || isAnimatingOut) {
+    if (!canPlay) {
       return;
     }
 
     // Mobile: first click selects, second click plays
     if (isTouchDevice) {
       if (!isSelected) {
-        setIsSelected(true);
+        onSelectionChange?.(true);
       } else {
         // Second click - play the card
         setIsAnimatingOut(true);
         onPlay(cardFace);
+        onSelectionChange?.(false);
       }
     } else {
       // Web: single click plays immediately
       setIsAnimatingOut(true);
       onPlay(cardFace);
     }
-  }, [cardFace, canPlay, isTouchDevice, isSelected, isAnimatingOut, onPlay]);
-
-  // Deselect card when it's played successfully
-  useEffect(() => {
-    if (!isAnimatingOut) {
-      setIsSelected(false);
-    }
-  }, [isAnimatingOut]);
+  }, [cardFace, canPlay, isTouchDevice, isSelected, onPlay, onSelectionChange]);
 
   return (
     <motion.div
@@ -95,6 +97,7 @@ export const Card: React.FC<CardProps> = ({
       onClick={handleClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      style={style}
       animate={{
         opacity: isAnimatingOut ? 0 : 1,
         x: isAnimatingOut ? 0 : fanEffect.x,

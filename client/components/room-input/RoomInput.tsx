@@ -20,8 +20,9 @@ const RoomInput: React.FC<RoomInputProps> = ({ initialRoomId = '' }) => {
 
   const handleSubmit = () => {
     if (!isValidRoomId) return;
-
     setInstanceIdInUrl(roomId.toUpperCase());
+    // refresh page
+    window.location.reload();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

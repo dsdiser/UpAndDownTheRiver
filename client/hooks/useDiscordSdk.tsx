@@ -210,7 +210,6 @@ export function useDiscordSdk(): DiscordContextValue {
     };
     return MOCK_DISCORD_CONTEXT_VALUE;
   }
-
   return ctx;
 }
 
