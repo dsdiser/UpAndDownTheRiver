@@ -273,7 +273,7 @@ const Background: React.FC = () => {
   return (
     <>
       <div className={styles.background} ref={containerRef} />
-      <button
+      {/* <button
         className={styles.debugButton}
         onClick={() => {
           const event = new Event('loopcount');
@@ -281,7 +281,7 @@ const Background: React.FC = () => {
         }}
       >
         Increment loop count
-      </button>
+      </button> */}
     </>
   );
 };

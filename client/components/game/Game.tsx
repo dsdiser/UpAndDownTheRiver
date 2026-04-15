@@ -59,8 +59,9 @@ const Game: React.FC = () => {
         onBetChange={handleBetChange}
         onBetSubmit={handleSubmitBet}
       />
-      <Hand />
+
       {waitingPlayers.length > 0 && <WaitingPlayers players={waitingPlayers} />}
+      <Hand />
     </div>
   );
 };

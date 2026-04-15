@@ -5,6 +5,7 @@ TODOS:
 - Basic Tutorial
 - Adjust # of rounds based on the number of players, ie if you have 8 people, you can only do 52/(8 player + 1 trump) = 5 rounds
 - Figuring out a method for handling players that drop mid game, allow other players to skip or just default to playing a card?
+- Make players be in a line rather than a table. 
 
 Extras that probably won't get done:
 - Allow for different scoring systems
