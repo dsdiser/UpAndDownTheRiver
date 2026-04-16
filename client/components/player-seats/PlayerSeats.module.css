@@ -43,12 +43,6 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.seat.waiting {
-  opacity: 0.65;
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
 .avatarContainer {
   display: flex;
   align-items: center;
@@ -89,20 +83,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.waitingBadge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: rgba(255, 193, 7, 0.8);
-  color: rgba(0, 0, 0, 0.87);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 /* Betting input styles */
