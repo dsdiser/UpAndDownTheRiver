@@ -59,11 +59,9 @@ const PlayerSeats: React.FC<PlayerSeatsProps> = () => {
   }, [activePlayers]);
 
   // Render a single player seat
-  const renderSeat = (seatNumber: number) => {
+  const renderSeat = (player: RemoteMember, seatNumber: number) => {
     // Find player assigned to this seat
-    const playerId = activePlayers[seatNumber - 1]?.id ?? null;
-    if (!playerId) return null;
-
+    const playerId = player.id;
     const isLocalPlayer = playerId === currentUserId;
     const member = memberMap.get(playerId);
     const seatHandSize = playerHandSizes[playerId] ?? 0;
@@ -122,7 +120,7 @@ const PlayerSeats: React.FC<PlayerSeatsProps> = () => {
   return (
     <div className={styles.seatsContainer}>
       <div className={styles.seatsGrid}>
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((seatNumber) => renderSeat(seatNumber))}
+        {activePlayers.map((player, index) => renderSeat(player, index + 1))}
       </div>
 
       {/* Central area - reserved for future use (cards, game info, etc) */}

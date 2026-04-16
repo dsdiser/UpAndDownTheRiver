@@ -138,7 +138,7 @@ export const Hand: React.FC = () => {
         return { card, canPlay: true };
       }
 
-      // NEED TO VERIFY THESE RULES, YOU MAY BE ABLE TO PLAY TRUMP NO MATTER WHAT.
+      // TODO: NEED TO VERIFY THESE RULES, YOU MAY BE ABLE TO PLAY TRUMP NO MATTER WHAT.
       // Check if player has any cards of the led suit
       const hasLedSuit = playerHand.some((c) => c.split('_')[0] === ledSuit);
       if (hasLedSuit) {
