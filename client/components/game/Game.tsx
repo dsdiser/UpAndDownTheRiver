@@ -19,6 +19,7 @@ const Game: React.FC = () => {
   return (
     <div className={styles.gameScreen}>
       <PlayerSeats />
+      {/* Add a play area section, where the trump card is shown and cards are placed when played */}
 
       {waitingPlayers.length > 0 && <WaitingPlayers players={waitingPlayers} />}
       <Hand />
