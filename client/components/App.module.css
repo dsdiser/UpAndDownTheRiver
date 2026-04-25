@@ -8,6 +8,7 @@
   color: inherit;
   display: flex;
   max-width: 80%;
+  height: 100%;
   place-self: center;
 }
 
